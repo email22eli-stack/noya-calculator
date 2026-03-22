@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#7c3aed">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,10 +13,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body {
-  height: 100%; overflow: hidden;
+html {
+  height: 100%; height: -webkit-fill-available;
+  background: #04030f;
+}
+body {
+  min-height: 100%; min-height: -webkit-fill-available;
+  overflow: hidden;
   background: #04030f;
   display: flex; align-items: center; justify-content: center;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   font-family: 'Segoe UI', Arial, sans-serif;
   touch-action: manipulation; user-select: none;
 }
@@ -71,6 +77,8 @@ html, body {
   position: absolute; border-radius: 50%;
   border: 1px solid rgba(124,58,237,.3);
   animation: haloExpand 4s ease-out infinite;
+  will-change: transform, opacity;
+  transform: translateZ(0);
 }
 @keyframes haloExpand {
   0%   { width:260px; height:260px; opacity:.7; }
@@ -80,8 +88,10 @@ html, body {
   position: absolute; width: 300px; height: 300px; border-radius: 50%;
   background: radial-gradient(circle, rgba(124,58,237,.35) 0%, transparent 70%);
   animation: orbPulse 3s ease-in-out infinite;
+  will-change: transform, opacity;
+  transform: translateZ(0);
 }
-@keyframes orbPulse { 0%,100%{transform:scale(1);opacity:.6} 50%{transform:scale(1.25);opacity:1} }
+@keyframes orbPulse { 0%,100%{transform:scale(1) translateZ(0);opacity:.6} 50%{transform:scale(1.25) translateZ(0);opacity:1} }
 
 #splashImg {
   width: min(260px, 62vw);
@@ -122,7 +132,7 @@ html, body {
 #cardWrap {
   position: relative; z-index: 10;
   width: min(430px, 97vw);
-  height: min(800px, 97vh);
+  height: min(800px, 97dvh, 97vh);
   border-radius: 28px;
   padding: 1.5px;
   background: linear-gradient(135deg, #00d4d4, #7c3aed 40%, #a855f7 70%, #00d4d4);
@@ -504,7 +514,7 @@ html, body {
 #plotDiv {
   border-radius:14px; overflow:hidden;
   border:1px solid rgba(137,180,250,.14);
-  display:none; height:220px; flex-shrink:0;
+  display:none; height:300px; flex-shrink:0;
   background:#050a15;
   box-shadow:0 4px 24px rgba(0,0,0,.5);
 }
@@ -1102,7 +1112,7 @@ async function analyzeFunc(){
       xaxis:{gridcolor:'#141f35',zerolinecolor:'#243050',color:'#7090b0'},
       yaxis:{gridcolor:'#141f35',zerolinecolor:'#243050',color:'#7090b0'},
       margin:{l:45,r:16,t:28,b:38},
-      height: 220,
+      height: 300,
       legend:{bgcolor:'rgba(0,0,0,0)',font:{color:'#c0d0ff',size:10}},
     },{responsive:true,displayModeBar:false});
     plotEl.classList.add('show');

@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#7c3aed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="נויה">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="Noya.png">
+<title>מחשבון נויה — בגרות 5 יחידות</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: #0d0d1a;
+    color: #e0e0ff;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    touch-action: manipulation;
+    user-select: none;
+  }
+
+  /* ── Floating math symbols background ── */
+  .math-bg {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    overflow: hidden;
+  }
+  .math-sym {
+    position: absolute;
+    color: rgba(124, 58, 237, 0.12);
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(16px, 3vw, 32px);
+    animation: floatSym linear infinite;
+    white-space: nowrap;
+  }
+  @keyframes floatSym {
+    from { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 0.8; }
+    to   { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+  }
+
+  /* ── Splash screen ── */
+  #splash {
+    position: fixed; inset: 0; z-index: 1000;
+    background: radial-gradient(ellipse at center, #1e1b4b 0%, #0d0d1a 70%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: opacity 0.6s ease;
+  }
+  #splash.hide { opacity: 0; pointer-events: none; }
+  #splash img {
+    width: min(220px, 50vw);
+    border-radius: 50%;
+    box-shadow: 0 0 40px rgba(124, 58, 237, 0.8), 0 0 80px rgba(0, 212, 212, 0.3);
+    animation: pulseGlow 3s ease-in-out infinite;
+  }
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 40px rgba(124,58,237,0.8), 0 0 80px rgba(0,212,212,0.3); }
+    50%       { box-shadow: 0 0 60px rgba(124,58,237,1),   0 0 120px rgba(0,212,212,0.5); }
+  }
+  #splash h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.8rem, 6vw, 3rem);
+    font-weight: 900;
+    background: linear-gradient(135deg, #00d4d4, #7c3aed, #a855f7);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-top: 24px; letter-spacing: 2px;
+  }
+  #splash p {
+    color: rgba(224,224,255,0.6);
+    font-size: clamp(0.85rem, 2.5vw, 1rem);
+    margin-top: 10px;
+    letter-spacing: 1px;
+  }
+  #splash .tap-hint {
+    position: absolute; bottom: 40px;
+    font-size: 0.8rem; color: rgba(255,255,255,0.3);
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:0.3} 50%{opacity:0.8} }
+
+  /* ── Main app ── */
+  #app {
+    position: fixed; inset: 0; z-index: 1;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Display ── */
+  .display-wrap {
+    background: rgba(30, 27, 75, 0.6);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(124,58,237,0.3);
+    padding: 12px 16px 10px;
+    flex-shrink: 0;
+  }
+  .display-expr {
+    font-size: clamp(0.75rem, 2.5vw, 0.9rem);
+    color: rgba(200,200,255,0.5);
+    min-height: 1.2em;
+    text-align: left;
+    font-family: 'Orbitron', monospace;
+    letter-spacing: 1px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .display-main {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2rem, 8vw, 3.5rem);
+    font-weight: 700;
+    text-align: left;
+    color: #e0e0ff;
+    letter-spacing: 2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    line-height: 1.1;
+  }
+  .display-main.error { color: #f38ba8; font-size: clamp(1rem,4vw,1.4rem); }
+
+  /* ── Buttons grid ── */
+  .btn-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 10px;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .btn {
+    border: none; border-radius: 14px;
+    font-size: clamp(1rem, 3.5vw, 1.5rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.08s, filter 0.08s;
+    min-height: 56px;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    letter-spacing: 0.5px;
+  }
+  .btn:active { transform: scale(0.92); filter: brightness(1.3); }
+
+  /* color classes */
+  .btn-num  { background: #1e1b4b; color: #e0e0ff; }
+  .btn-op   { background: #7c3aed; color: #fff; }
+  .btn-eq   { background: #00d4d4; color: #0d0d1a; }
+  .btn-clear { background: #dc2626; color: #fff; }
+  .btn-del  { background: #9f1239; color: #fff; }
+  .btn-quad { background: #d97706; color: #0d0d1a; font-size: clamp(0.8rem,2.5vw,1.1rem); }
+  .btn-form { background: linear-gradient(135deg,#a855f7,#7c3aed); color: #fff; font-size: clamp(0.7rem,2.2vw,0.95rem); }
+  .btn-func { background: linear-gradient(135deg,#0891b2,#0e7490); color: #fff; font-size: clamp(0.7rem,2.2vw,0.95rem); }
+
+  .btn-wide { grid-column: span 2; }
+
+  /* ── Panels (formula / quadratic / function) ── */
+  .panel {
+    position: fixed; inset: 0; z-index: 500;
+    background: rgba(13,13,26,0.96);
+    backdrop-filter: blur(16px);
+    display: none; flex-direction: column;
+    overflow: hidden;
+  }
+  .panel.open { display: flex; }
+
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px;
+    background: rgba(30,27,75,0.8);
+    border-bottom: 1px solid rgba(124,58,237,0.4);
+    flex-shrink: 0;
+  }
+  .panel-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1rem, 3.5vw, 1.3rem);
+    font-weight: 700;
+    background: linear-gradient(135deg, #00d4d4, #a855f7);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .btn-close {
+    background: rgba(220,38,38,0.2);
+    border: 1px solid rgba(220,38,38,0.4);
+    color: #f38ba8; border-radius: 8px;
+    width: 36px; height: 36px; font-size: 1.2rem;
+    cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Formula panel */
+  .formula-tabs {
+    display: flex; overflow-x: auto; gap: 6px;
+    padding: 10px 12px; flex-shrink: 0;
+    scrollbar-width: none;
+  }
+  .formula-tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    background: rgba(30,27,75,0.6);
+    border: 1px solid rgba(124,58,237,0.3);
+    color: rgba(200,200,255,0.7); border-radius: 20px;
+    padding: 6px 14px; white-space: nowrap; cursor: pointer;
+    font-size: clamp(0.7rem, 2.2vw, 0.85rem);
+    transition: all 0.2s;
+  }
+  .tab-btn.active {
+    background: #7c3aed; color: #fff;
+    border-color: #7c3aed;
+  }
+  .search-wrap {
+    padding: 0 12px 8px; flex-shrink: 0;
+  }
+  .search-input {
+    width: 100%; background: rgba(30,27,75,0.6);
+    border: 1px solid rgba(124,58,237,0.3);
+    color: #e0e0ff; border-radius: 10px;
+    padding: 9px 14px; font-size: 0.95rem;
+    outline: none;
+  }
+  .search-input::placeholder { color: rgba(200,200,255,0.35); }
+  .formula-list {
+    flex: 1; overflow-y: auto; padding: 0 12px 12px;
+    scrollbar-width: thin; scrollbar-color: #7c3aed transparent;
+  }
+  .formula-card {
+    background: rgba(30,27,75,0.5);
+    border: 1px solid rgba(124,58,237,0.2);
+    border-radius: 12px; padding: 12px 14px;
+    margin-bottom: 8px; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .formula-card:active { border-color: #a855f7; background: rgba(168,85,247,0.15); }
+  .formula-tag {
+    font-size: 0.7rem; color: #a855f7;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .formula-text {
+    font-family: 'Courier New', monospace;
+    font-size: clamp(0.85rem, 2.5vw, 1rem);
+    color: #e0e0ff; direction: ltr; text-align: left;
+  }
+  .copy-toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: #00d4d4; color: #0d0d1a;
+    padding: 10px 24px; border-radius: 20px;
+    font-weight: 700; font-size: 0.9rem;
+    z-index: 9999; opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .copy-toast.show { opacity: 1; }
+
+  /* Quadratic panel */
+  .quad-body {
+    flex: 1; overflow-y: auto; padding: 16px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .input-row {
+    display: flex; gap: 10px; align-items: center;
+  }
+  .coef-label {
+    color: #a855f7; font-weight: 700; font-size: 1rem; white-space: nowrap;
+  }
+  .coef-input {
+    flex: 1; background: rgba(30,27,75,0.6);
+    border: 1px solid rgba(124,58,237,0.4);
+    color: #e0e0ff; border-radius: 10px;
+    padding: 10px 14px; font-size: 1.1rem;
+    outline: none; text-align: center;
+    font-family: 'Orbitron', monospace;
+  }
+  .coef-input:focus { border-color: #7c3aed; }
+  .solve-btn {
+    background: linear-gradient(135deg, #d97706, #b45309);
+    color: #fff; border: none; border-radius: 12px;
+    padding: 14px; font-size: 1.1rem; font-weight: 700;
+    cursor: pointer; width: 100%;
+  }
+  .quad-result {
+    background: rgba(30,27,75,0.5);
+    border: 1px solid rgba(0,212,212,0.3);
+    border-radius: 14px; padding: 16px;
+    font-family: 'Courier New', monospace;
+    font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+    line-height: 1.8;
+    white-space: pre-wrap;
+    display: none;
+  }
+  .quad-result.show { display: block; }
+  .res-green  { color: #a6e3a1; }
+  .res-blue   { color: #89b4fa; }
+  .res-orange { color: #fab387; }
+  .res-red    { color: #f38ba8; }
+
+  /* Function analysis panel */
+  .func-body {
+    flex: 1; overflow-y: auto; padding: 14px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .func-input-row {
+    display: flex; gap: 8px; align-items: center;
+  }
+  .func-label {
+    color: #89b4fa; font-weight: 700; font-size: 1rem; white-space: nowrap;
+  }
+  .func-input {
+    flex: 1; background: rgba(30,27,75,0.6);
+    border: 1px solid rgba(137,180,250,0.4);
+    color: #e0e0ff; border-radius: 10px;
+    padding: 10px 14px; font-size: 1rem;
+    outline: none; direction: ltr;
+    font-family: 'Courier New', monospace;
+  }
+  .func-input:focus { border-color: #89b4fa; }
+  .analyze-btn {
+    background: linear-gradient(135deg, #0891b2, #0e7490);
+    color: #fff; border: none; border-radius: 12px;
+    padding: 10px 18px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; white-space: nowrap;
+  }
+  .func-examples {
+    color: rgba(200,200,255,0.4); font-size: 0.75rem;
+    text-align: center;
+  }
+  .func-result {
+    background: rgba(30,27,75,0.5);
+    border: 1px solid rgba(137,180,250,0.25);
+    border-radius: 14px; padding: 14px;
+    font-family: 'Courier New', monospace;
+    font-size: clamp(0.78rem, 2.2vw, 0.92rem);
+    line-height: 1.9;
+    white-space: pre-wrap;
+    direction: rtl;
+    display: none; overflow-x: auto;
+  }
+  .func-result.show { display: block; }
+  #plotDiv {
+    border-radius: 14px; overflow: hidden;
+    border: 1px solid rgba(137,180,250,0.2);
+    display: none;
+    background: #111827;
+    min-height: 280px;
+  }
+  #plotDiv.show { display: block; }
+
+  /* spinner */
+  .spinner {
+    display: none; text-align: center; padding: 20px;
+    color: #a855f7; font-size: 1.5rem;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Floating math symbols -->
+<div class="math-bg" id="mathBg"></div>
+
+<!-- Splash screen -->
+<div id="splash" onclick="dismissSplash()">
+  <img src="Noya.png" alt="נויה">
+  <h1>נויה</h1>
+  <p>מחשבון בגרות מתמטיקה 5 יחידות</p>
+  <div class="tap-hint">לחץ להמשך ✨</div>
+</div>
+
+<!-- Main calculator -->
+<div id="app">
+  <!-- Display -->
+  <div class="display-wrap">
+    <div class="display-expr" id="exprDisplay"></div>
+    <div class="display-main" id="mainDisplay">0</div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="btn-grid">
+    <!-- Row 1: special -->
+    <button class="btn btn-form" onclick="openPanel('formulaPanel')">נוסחאות</button>
+    <button class="btn btn-quad" onclick="openPanel('quadPanel')">x²</button>
+    <button class="btn btn-func" onclick="openPanel('funcPanel')">חקר f(x)</button>
+    <button class="btn btn-del" onclick="delChar()">⌫</button>
+
+    <!-- Row 2 -->
+    <button class="btn btn-clear" onclick="clearAll()">C</button>
+    <button class="btn btn-op" onclick="inputOp('%')">%</button>
+    <button class="btn btn-op" onclick="toggleSign()">+/-</button>
+    <button class="btn btn-op" onclick="inputOp('/')">÷</button>
+
+    <!-- Row 3 -->
+    <button class="btn btn-num" onclick="inputDigit('7')">7</button>
+    <button class="btn btn-num" onclick="inputDigit('8')">8</button>
+    <button class="btn btn-num" onclick="inputDigit('9')">9</button>
+    <button class="btn btn-op" onclick="inputOp('*')">×</button>
+
+    <!-- Row 4 -->
+    <button class="btn btn-num" onclick="inputDigit('4')">4</button>
+    <button class="btn btn-num" onclick="inputDigit('5')">5</button>
+    <button class="btn btn-num" onclick="inputDigit('6')">6</button>
+    <button class="btn btn-op" onclick="inputOp('-')">−</button>
+
+    <!-- Row 5 -->
+    <button class="btn btn-num" onclick="inputDigit('1')">1</button>
+    <button class="btn btn-num" onclick="inputDigit('2')">2</button>
+    <button class="btn btn-num" onclick="inputDigit('3')">3</button>
+    <button class="btn btn-op" onclick="inputOp('+')">+</button>
+
+    <!-- Row 6 -->
+    <button class="btn btn-num btn-wide" onclick="inputDigit('0')">0</button>
+    <button class="btn btn-num" onclick="inputDot()">.</button>
+    <button class="btn btn-eq" onclick="calculate()">=</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- Formula Panel -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="panel" id="formulaPanel">
+  <div class="panel-header">
+    <span class="panel-title">📐 דף נוסחאות — בגרות 5 יח'</span>
+    <button class="btn-close" onclick="closePanel('formulaPanel')">✕</button>
+  </div>
+  <div class="formula-tabs" id="formulaTabs"></div>
+  <div class="search-wrap">
+    <input class="search-input" id="formulaSearch" placeholder="חיפוש נוסחה..." oninput="filterFormulas()">
+  </div>
+  <div class="formula-list" id="formulaList"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- Quadratic Panel -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="panel" id="quadPanel">
+  <div class="panel-header">
+    <span class="panel-title">✏️ משוואה ריבועית</span>
+    <button class="btn-close" onclick="closePanel('quadPanel')">✕</button>
+  </div>
+  <div class="quad-body">
+    <div style="color:rgba(200,200,255,0.6); text-align:center; font-size:1rem;">
+      ax² + bx + c = 0
+    </div>
+    <div class="input-row">
+      <span class="coef-label">a =</span>
+      <input class="coef-input" id="qa" type="number" placeholder="1" value="1">
+    </div>
+    <div class="input-row">
+      <span class="coef-label">b =</span>
+      <input class="coef-input" id="qb" type="number" placeholder="0" value="0">
+    </div>
+    <div class="input-row">
+      <span class="coef-label">c =</span>
+      <input class="coef-input" id="qc" type="number" placeholder="0" value="0">
+    </div>
+    <button class="solve-btn" onclick="solveQuad()">פתור</button>
+    <div class="quad-result" id="quadResult"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- Function Analysis Panel -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="panel" id="funcPanel">
+  <div class="panel-header">
+    <span class="panel-title">🔍 חקר פונקציה</span>
+    <button class="btn-close" onclick="closePanel('funcPanel')">✕</button>
+  </div>
+  <div class="func-body">
+    <div class="func-input-row">
+      <span class="func-label">f(x) =</span>
+      <input class="func-input" id="funcInput" placeholder="x^3 - 3*x + 2" value="x^3 - 3*x + 2">
+      <button class="analyze-btn" onclick="analyzeFunc()">חקור</button>
+    </div>
+    <div class="func-examples">דוגמאות: x^3-3*x+2 | sin(x) | 1/(x-1) | exp(x) | log(x) | sqrt(x)</div>
+    <div class="spinner" id="funcSpinner">⟳</div>
+    <div class="func-result" id="funcResult"></div>
+    <div id="plotDiv"></div>
+  </div>
+</div>
+
+<!-- Copy toast -->
+<div class="copy-toast" id="copyToast">הועתק! ✓</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- Scripts -->
+<!-- ══════════════════════════════════════════════════════ -->
+<script>
+// ── Math background ──────────────────────────────────────
+const SYMBOLS = ['π','∫','∑','√','∞','Δ','∂','θ','α','β','λ','ε','σ','∇','≠','≤','≥','∈'];
+const bg = document.getElementById('mathBg');
+for (let i = 0; i < 18; i++) {
+  const el = document.createElement('div');
+  el.className = 'math-sym';
+  el.textContent = SYMBOLS[i % SYMBOLS.length];
+  el.style.cssText = `
+    left: ${Math.random()*100}%;
+    animation-duration: ${8 + Math.random()*14}s;
+    animation-delay: ${-Math.random()*20}s;
+    font-size: ${14 + Math.random()*24}px;
+  `;
+  bg.appendChild(el);
+}
+
+// ── Splash ───────────────────────────────────────────────
+let splashDone = false;
+function dismissSplash() {
+  if (splashDone) return;
+  splashDone = true;
+  const s = document.getElementById('splash');
+  s.classList.add('hide');
+  setTimeout(() => s.style.display = 'none', 700);
+}
+setTimeout(dismissSplash, 4000);
+
+// ── Calculator state ─────────────────────────────────────
+let current   = '0';
+let stored    = null;
+let operator  = null;
+let freshNum  = true;
+let justCalc  = false;
+
+function updateDisplay(expr = '') {
+  const md = document.getElementById('mainDisplay');
+  md.textContent = current;
+  md.className = 'display-main';
+  document.getElementById('exprDisplay').textContent = expr;
+}
+
+function inputDigit(d) {
+  if (justCalc) { current = d; freshNum = false; justCalc = false; }
+  else if (freshNum) { current = d; freshNum = false; }
+  else { if (current.length >= 15) return; current = current === '0' ? d : current + d; }
+  updateDisplay();
+}
+
+function inputDot() {
+  if (justCalc) { current = '0.'; freshNum = false; justCalc = false; }
+  else if (freshNum) { current = '0.'; freshNum = false; }
+  else if (!current.includes('.')) { current += '.'; }
+  updateDisplay();
+}
+
+function inputOp(op) {
+  if (!justCalc && operator && !freshNum) runCalc();
+  stored = parseFloat(current);
+  operator = op;
+  freshNum = true;
+  justCalc = false;
+  const opSym = {'+':'+', '-':'−', '*':'×', '/':'÷', '%':'%'};
+  updateDisplay(`${stored} ${opSym[op] || op}`);
+}
+
+function runCalc() {
+  if (stored === null || operator === null) return;
+  const b = parseFloat(current);
+  let res;
+  try {
+    switch (operator) {
+      case '+': res = stored + b; break;
+      case '-': res = stored - b; break;
+      case '*': res = stored * b; break;
+      case '/':
+        if (b === 0) throw new Error('חלוקה באפס!');
+        res = stored / b;
+        break;
+      case '%': res = stored % b; break;
+      default: return;
+    }
+    if (!isFinite(res)) throw new Error('תוצאה לא חוקית');
+    // format nicely
+    current = parseFloat(res.toPrecision(12)).toString();
+  } catch (err) {
+    const md = document.getElementById('mainDisplay');
+    md.textContent = err.message;
+    md.className = 'display-main error';
+    current = '0'; stored = null; operator = null; freshNum = true;
+    return;
+  }
+}
+
+function calculate() {
+  if (operator === null) return;
+  const opSym = {'+':'+', '-':'−', '*':'×', '/':'÷', '%':'%'};
+  const expr = `${stored} ${opSym[operator] || operator} ${current}`;
+  runCalc();
+  stored = null; operator = null; freshNum = true; justCalc = true;
+  updateDisplay(expr + ' =');
+}
+
+function clearAll() {
+  current = '0'; stored = null; operator = null; freshNum = true; justCalc = false;
+  updateDisplay();
+}
+
+function delChar() {
+  if (justCalc || freshNum) { clearAll(); return; }
+  current = current.slice(0, -1) || '0';
+  updateDisplay();
+}
+
+function toggleSign() {
+  if (current !== '0') current = current.startsWith('-') ? current.slice(1) : '-' + current;
+  updateDisplay();
+}
+
+// ── Panel helpers ─────────────────────────────────────────
+function openPanel(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'formulaPanel') initFormulas();
+}
+function closePanel(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// ── Formula data ──────────────────────────────────────────
+const FORMULAS = {
+  'אלגברה': [
+    ['כפל מקוצר',      '(a+b)² = a² + 2ab + b²'],
+    ['כפל מקוצר',      '(a-b)² = a² - 2ab + b²'],
+    ['כפל מקוצר',      '(a+b)(a-b) = a² - b²'],
+    ['כפל מקוצר',      '(a+b)³ = a³ + 3a²b + 3ab² + b³'],
+    ['כפל מקוצר',      '(a-b)³ = a³ - 3a²b + 3ab² - b³'],
+    ['משוואה ריבועית', 'x = (-b ± √(b²-4ac)) / 2a'],
+    ['דיסקרימיננטה',   'Δ = b² - 4ac'],
+    ['לוגריתמים',      'logₐ(xy) = logₐx + logₐy'],
+    ['לוגריתמים',      'logₐ(x/y) = logₐx - logₐy'],
+    ['לוגריתמים',      'logₐ(xⁿ) = n·logₐx'],
+    ['לוגריתמים',      'logₐb = log(b) / log(a)'],
+    ['חזקות',          'aᵐ · aⁿ = aᵐ⁺ⁿ'],
+    ['חזקות',          '(aᵐ)ⁿ = aᵐⁿ'],
+    ['חזקות',          'a⁻ⁿ = 1/aⁿ'],
+    ['חזקות',          '√a = a^(1/2)'],
+  ],
+  'סדרות': [
+    ['סדרה חשבונית', 'aₙ = a₁ + (n-1)d'],
+    ['סדרה חשבונית', 'Sₙ = n·(a₁ + aₙ)/2'],
+    ['סדרה חשבונית', 'Sₙ = n·(2a₁ + (n-1)d) / 2'],
+    ['סדרה הנדסית',  'aₙ = a₁ · qⁿ⁻¹'],
+    ['סדרה הנדסית',  'Sₙ = a₁·(qⁿ - 1) / (q - 1)   [q ≠ 1]'],
+    ['סדרה הנדסית',  'S∞ = a₁ / (1 - q)   [|q| < 1]'],
+    ['צמיחה ודעיכה', 'A(t) = A₀ · (1 + r)ᵗ'],
+    ['צמיחה ודעיכה', 'A(t) = A₀ · eᵏᵗ'],
+  ],
+  'טריגונומטריה': [
+    ['זהויות יסוד',   'sin²x + cos²x = 1'],
+    ['זהויות יסוד',   'tan x = sin x / cos x'],
+    ['זהויות יסוד',   '1 + tan²x = 1/cos²x'],
+    ['זוויות כפולות', 'sin(2x) = 2·sin x·cos x'],
+    ['זוויות כפולות', 'cos(2x) = cos²x - sin²x'],
+    ['זוויות כפולות', 'cos(2x) = 1 - 2sin²x'],
+    ['סכום זוויות',   'sin(A±B) = sinA·cosB ± cosA·sinB'],
+    ['סכום זוויות',   'cos(A±B) = cosA·cosB ∓ sinA·sinB'],
+    ['משפטי מישור',   'a/sinA = b/sinB = c/sinC  (סינוסים)'],
+    ['משפטי מישור',   'a² = b²+c² - 2bc·cosA  (קוסינוסים)'],
+    ['שטחים',         'S△ = ½·a·b·sinC'],
+    ['קשת ומגזר',     'L = r·α   (אורך קשת, α בראדיאנים)'],
+    ['קשת ומגזר',     'S = ½·r²·α  (שטח מגזר)'],
+    ['ערכים מיוחדים', 'sin30°=½ , cos30°=√3/2 , tan30°=1/√3'],
+    ['ערכים מיוחדים', 'sin45°=√2/2 , cos45°=√2/2 , tan45°=1'],
+    ['ערכים מיוחדים', 'sin60°=√3/2 , cos60°=½ , tan60°=√3'],
+  ],
+  'גיאומטריה אנליטית': [
+    ['מרחק ואמצע',       'd = √((x₂-x₁)² + (y₂-y₁)²)'],
+    ['מרחק ואמצע',       'M = ((x₁+x₂)/2 , (y₁+y₂)/2)'],
+    ['ישר',              'שיפוע: m = (y₂-y₁) / (x₂-x₁)'],
+    ['ישר',              'y = mx + b'],
+    ['ישר',              'y - y₁ = m(x - x₁)'],
+    ['ישר',              'ישרים מאונכים: m₁ · m₂ = -1'],
+    ['ישר',              'ישרים מקבילים: m₁ = m₂'],
+    ['מעגל',             '(x-a)² + (y-b)² = r²'],
+    ['מרחק נקודה מישר',  'd = |ax₀ + by₀ + c| / √(a²+b²)'],
+    ['פרבולה',           'y = ax² + bx + c   ,   קודקוד: x = -b/2a'],
+  ],
+  'חדו"א': [
+    ['נגזרות יסוד',   "(c)' = 0"],
+    ['נגזרות יסוד',   "(xⁿ)' = n·xⁿ⁻¹"],
+    ['נגזרות יסוד',   "(eˣ)' = eˣ"],
+    ['נגזרות יסוד',   "(aˣ)' = aˣ·ln a"],
+    ['נגזרות יסוד',   "(ln x)' = 1/x"],
+    ['נגזרות יסוד',   "(sin x)' = cos x"],
+    ['נגזרות יסוד',   "(cos x)' = -sin x"],
+    ['נגזרות יסוד',   "(tan x)' = 1/cos²x"],
+    ['כללי נגזרת',    "(u·v)' = u'v + uv'"],
+    ['כללי נגזרת',    "(u/v)' = (u'v - uv') / v²"],
+    ['כללי נגזרת',    "(f(g(x)))' = f'(g(x))·g'(x)  (כלל השרשרת)"],
+    ['אינטגרלים',     '∫xⁿ dx = xⁿ⁺¹/(n+1) + C   [n ≠ -1]'],
+    ['אינטגרלים',     '∫eˣ dx = eˣ + C'],
+    ['אינטגרלים',     '∫(1/x) dx = ln|x| + C'],
+    ['אינטגרלים',     '∫sin x dx = -cos x + C'],
+    ['אינטגרלים',     '∫cos x dx = sin x + C'],
+    ['אינטגרל מוגדר', '∫[a→b] f(x)dx = F(b) - F(a)'],
+    ['שטח',           'S = ∫[a→b] |f(x)| dx'],
+    ['חקר פונקציה',   "f'(x)=0  ←  נקודת קיצון אפשרית"],
+    ['חקר פונקציה',   "f''(x)>0  ←  מינימום מקומי"],
+    ['חקר פונקציה',   "f''(x)<0  ←  מקסימום מקומי"],
+    ['חקר פונקציה',   "f''(x)=0  ←  נקודת פיתול אפשרית"],
+  ],
+  'וקטורים': [
+    ['אורך וקטור',          '|v| = √(a² + b² + c²)'],
+    ['מכפלה סקלרית',        'u·v = a₁a₂ + b₁b₂ + c₁c₂'],
+    ['זווית',               'cos θ = (u·v) / (|u|·|v|)'],
+    ['אנכיים/מקבילים',      'מאונכים: u·v = 0   |   מקבילים: u = k·v'],
+    ['מישור',               'ax + by + cz + d = 0   ,   נורמל: n=(a,b,c)'],
+    ['מרחק נקודה ממישור',   'd = |ax₀+by₀+cz₀+d| / √(a²+b²+c²)'],
+    ['זוויות',              'sin α = |n·v| / (|n|·|v|)  (ישר-מישור)'],
+    ['זוויות',              'cos θ = |n₁·n₂| / (|n₁|·|n₂|)  (מישור-מישור)'],
+  ],
+  'מספרים מרוכבים': [
+    ['הגדרה',            'i² = -1   ,   z = a + bi'],
+    ['ערך מוחלט',        '|z| = √(a² + b²)'],
+    ['צמוד',             'z̄ = a - bi'],
+    ['כפל',              '(a+bi)(c+di) = (ac-bd) + (ad+bc)i'],
+    ['חילוק',            '(a+bi)/(c+di) = [(a+bi)(c-di)] / (c²+d²)'],
+    ['צורה טריגונומטרית','z = r(cos θ + i·sin θ)   ,   r=|z|'],
+    ['כפל טריג\'',       'z₁·z₂ = r₁r₂[cos(θ₁+θ₂) + i·sin(θ₁+θ₂)]'],
+    ['משפט דה-מואבר',   'zⁿ = rⁿ(cos nθ + i·sin nθ)'],
+    ['שורשי יחידה',      'wₖ = cos(2πk/n) + i·sin(2πk/n)   k=0..n-1'],
+  ],
+};
+
+const CATEGORIES = Object.keys(FORMULAS);
+let activeTab = CATEGORIES[0];
+let formulasInited = false;
+
+function initFormulas() {
+  if (formulasInited) return;
+  formulasInited = true;
+  const tabs = document.getElementById('formulaTabs');
+  CATEGORIES.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (cat === activeTab ? ' active' : '');
+    btn.textContent = cat;
+    btn.onclick = () => { activeTab = cat; setActiveTab(cat); renderFormulas(); };
+    tabs.appendChild(btn);
+  });
+  renderFormulas();
+}
+
+function setActiveTab(cat) {
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent === cat);
+  });
+  document.getElementById('formulaSearch').value = '';
+}
+
+function renderFormulas(filter = '') {
+  const list = document.getElementById('formulaList');
+  list.innerHTML = '';
+  const items = filter
+    ? CATEGORIES.flatMap(c => FORMULAS[c].map(f => [c, ...f]))
+               .filter(([, tag, text]) => text.includes(filter) || tag.includes(filter))
+    : FORMULAS[activeTab].map(([tag, text]) => [activeTab, tag, text]);
+
+  if (items.length === 0) {
+    list.innerHTML = '<div style="color:rgba(200,200,255,0.4);text-align:center;padding:30px;">לא נמצאו נוסחאות</div>';
+    return;
+  }
+  items.forEach(([, tag, text]) => {
+    const card = document.createElement('div');
+    card.className = 'formula-card';
+    card.innerHTML = `<div class="formula-tag">${tag}</div><div class="formula-text">${text}</div>`;
+    card.onclick = () => copyFormula(text);
+    list.appendChild(card);
+  });
+}
+
+function filterFormulas() {
+  const q = document.getElementById('formulaSearch').value.trim();
+  renderFormulas(q);
+}
+
+function copyFormula(text) {
+  navigator.clipboard.writeText(text).catch(() => {});
+  const t = document.getElementById('copyToast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ── Quadratic solver ──────────────────────────────────────
+function fmt(n) {
+  const r = parseFloat(n.toFixed(6));
+  return r === Math.floor(r) ? r.toString() : r.toString();
+}
+
+function solveQuad() {
+  const a = parseFloat(document.getElementById('qa').value);
+  const b = parseFloat(document.getElementById('qb').value);
+  const c = parseFloat(document.getElementById('qc').value);
+  const el = document.getElementById('quadResult');
+
+  if (isNaN(a) || isNaN(b) || isNaN(c)) {
+    showQuadResult('<span class="res-red">נא להזין מספרים תקינים</span>');
+    return;
+  }
+  if (a === 0) {
+    showQuadResult('<span class="res-red">a לא יכול להיות 0</span>');
+    return;
+  }
+
+  const disc = b*b - 4*a*c;
+  const eq = `${a}x² ${b>=0?'+':''}${b}x ${c>=0?'+':''}${c} = 0`;
+
+  let html = `<span class="res-blue">המשוואה:</span>  ${eq}\n`;
+  html += `<span class="res-blue">Δ = b²-4ac =</span>  ${fmt(disc)}\n\n`;
+
+  if (disc > 0) {
+    const x1 = (-b + Math.sqrt(disc)) / (2*a);
+    const x2 = (-b - Math.sqrt(disc)) / (2*a);
+    html += `<span class="res-green">שני פתרונות ממשיים:</span>\n`;
+    html += `  x₁ = ${fmt(x1)}\n`;
+    html += `  x₂ = ${fmt(x2)}`;
+  } else if (disc === 0) {
+    const x = -b / (2*a);
+    html += `<span class="res-orange">פתרון ממשי אחד (כפול):</span>\n`;
+    html += `  x = ${fmt(x)}`;
+  } else {
+    const re = -b / (2*a);
+    const im = Math.sqrt(-disc) / (2*a);
+    html += `<span class="res-red">פתרונות מרוכבים (Δ < 0):</span>\n`;
+    html += `  x₁ = ${fmt(re)} + ${fmt(im)}i\n`;
+    html += `  x₂ = ${fmt(re)} − ${fmt(im)}i`;
+  }
+  showQuadResult(html);
+}
+
+function showQuadResult(html) {
+  const el = document.getElementById('quadResult');
+  el.innerHTML = html;
+  el.classList.add('show');
+}
+
+// ── Function analysis ─────────────────────────────────────
+// We use math.js for numerical analysis (loaded lazily)
+let mathjsLoaded = false;
+let mjsLoadPromise = null;
+
+function loadMathJS() {
+  if (mathjsLoaded) return Promise.resolve();
+  if (mjsLoadPromise) return mjsLoadPromise;
+  mjsLoadPromise = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/mathjs@13/package.json';
+    s.onerror = rej;
+    // actually load the full bundle:
+    const s2 = document.createElement('script');
+    s2.src = 'https://cdn.jsdelivr.net/npm/mathjs@13.2.0/lib/browser/math.js';
+    s2.onload = () => { mathjsLoaded = true; res(); };
+    s2.onerror = rej;
+    document.head.appendChild(s2);
+  });
+  return mjsLoadPromise;
+}
+
+let plotlyLoaded = false;
+let plotlyPromise = null;
+function loadPlotly() {
+  if (plotlyLoaded) return Promise.resolve();
+  if (plotlyPromise) return plotlyPromise;
+  plotlyPromise = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.plot.ly/plotly-2.35.2.min.js';
+    s.onload = () => { plotlyLoaded = true; res(); };
+    s.onerror = rej;
+    document.head.appendChild(s);
+  });
+  return plotlyPromise;
+}
+
+function showSpinner(show) {
+  document.getElementById('funcSpinner').classList.toggle('show', show);
+}
+
+async function analyzeFunc() {
+  const expr = document.getElementById('funcInput').value.trim();
+  if (!expr) return;
+
+  const resultEl = document.getElementById('funcResult');
+  const plotEl   = document.getElementById('plotDiv');
+  resultEl.classList.remove('show');
+  plotEl.classList.remove('show');
+  showSpinner(true);
+
+  try {
+    await Promise.all([loadMathJS(), loadPlotly()]);
+  } catch {
+    showSpinner(false);
+    resultEl.innerHTML = '<span style="color:#f38ba8">שגיאה בטעינת ספריות — בדוק חיבור לאינטרנט</span>';
+    resultEl.classList.add('show');
+    return;
+  }
+
+  showSpinner(false);
+
+  try {
+    const mjs = window.math;
+    // Compile expression
+    const compiled = mjs.compile(expr);
+    const f = x => compiled.evaluate({x});
+
+    // Find domain issues: sample points
+    const RANGE = 10;
+    const N = 500;
+    const xs = Array.from({length: N}, (_, i) => -RANGE + i * (2*RANGE/(N-1)));
+
+    // Numerical derivative
+    const h = 1e-5;
+    const df  = x => (f(x+h) - f(x-h)) / (2*h);
+    const ddf = x => (f(x+h) - 2*f(x) + f(x-h)) / (h*h);
+
+    // Filter valid xs
+    const validXs = xs.filter(x => {
+      try { const v = f(x); return isFinite(v) && !isNaN(v); }
+      catch { return false; }
+    });
+
+    if (validXs.length === 0) throw new Error('לא ניתן לחשב את הפונקציה בתחום זה');
+
+    // Domain (rough)
+    const domMin = validXs[0].toFixed(2);
+    const domMax = validXs[validXs.length-1].toFixed(2);
+
+    // X-intercepts (sign changes)
+    const xInter = [];
+    for (let i = 0; i < validXs.length-1; i++) {
+      const x1 = validXs[i], x2 = validXs[i+1];
+      let y1, y2;
+      try { y1 = f(x1); y2 = f(x2); } catch { continue; }
+      if (y1 * y2 < 0) {
+        // bisection
+        let lo = x1, hi = x2;
+        for (let k=0; k<40; k++) {
+          const mid = (lo+hi)/2;
+          try { if (f(lo)*f(mid) <= 0) hi = mid; else lo = mid; } catch { break; }
+        }
+        const root = (lo+hi)/2;
+        if (!xInter.some(r => Math.abs(r-root) < 0.01))
+          xInter.push(parseFloat(root.toFixed(4)));
+      }
+    }
+
+    // Y-intercept
+    let yInt = null;
+    try { const v = f(0); if (isFinite(v)) yInt = parseFloat(v.toFixed(4)); } catch {}
+
+    // Critical points (f'=0 sign changes)
+    const critPts = [];
+    for (let i = 0; i < validXs.length-1; i++) {
+      const x1 = validXs[i], x2 = validXs[i+1];
+      let d1, d2;
+      try { d1 = df(x1); d2 = df(x2); } catch { continue; }
+      if (isFinite(d1) && isFinite(d2) && d1*d2 < 0) {
+        let lo = x1, hi = x2;
+        for (let k=0; k<40; k++) {
+          const mid = (lo+hi)/2;
+          try { if (df(lo)*df(mid) <= 0) hi = mid; else lo = mid; } catch { break; }
+        }
+        const cx = (lo+hi)/2;
+        if (!critPts.some(p => Math.abs(p.x-cx) < 0.01)) {
+          try {
+            const cy = f(cx);
+            const dd = ddf(cx);
+            const type = dd > 0 ? 'מינימום' : dd < 0 ? 'מקסימום' : 'אפשרי';
+            critPts.push({x: parseFloat(cx.toFixed(4)), y: parseFloat(cy.toFixed(4)), type});
+          } catch {}
+        }
+      }
+    }
+
+    // Inflection points (f''=0 sign changes)
+    const inflPts = [];
+    for (let i = 0; i < validXs.length-1; i++) {
+      const x1 = validXs[i], x2 = validXs[i+1];
+      let dd1, dd2;
+      try { dd1 = ddf(x1); dd2 = ddf(x2); } catch { continue; }
+      if (isFinite(dd1) && isFinite(dd2) && dd1*dd2 < 0) {
+        let lo = x1, hi = x2;
+        for (let k=0; k<40; k++) {
+          const mid = (lo+hi)/2;
+          try { if (ddf(lo)*ddf(mid) <= 0) hi = mid; else lo = mid; } catch { break; }
+        }
+        const ix = (lo+hi)/2;
+        if (!inflPts.some(p => Math.abs(p.x-ix) < 0.01)) {
+          try { inflPts.push({x: parseFloat(ix.toFixed(4)), y: parseFloat(f(ix).toFixed(4))}); } catch {}
+        }
+      }
+    }
+
+    // Build report
+    let report = '';
+    report += `📌 פונקציה: f(x) = ${expr}\n`;
+    report += `${'─'.repeat(38)}\n`;
+    report += `📍 תחום הגדרה משוער: [${domMin}, ${domMax}]\n\n`;
+
+    report += `📍 חיתוכים עם ציר x:\n`;
+    if (xInter.length) report += `   x = ${xInter.join(' , ')}\n`;
+    else report += `   לא נמצאו חיתוכים בתחום\n`;
+
+    report += `📍 חיתוך עם ציר y:\n`;
+    report += yInt !== null ? `   y = ${yInt}\n\n` : `   לא מוגדרת ב-x=0\n\n`;
+
+    report += `📍 נקודות קיצון (f'(x) = 0):\n`;
+    if (critPts.length) {
+      critPts.forEach(p => report += `   x = ${p.x},  f(x) = ${p.y}  [${p.type}]\n`);
+    } else report += `   לא נמצאו בתחום\n`;
+    report += '\n';
+
+    report += `📍 נקודות פיתול (f''(x) = 0):\n`;
+    if (inflPts.length) {
+      inflPts.forEach(p => report += `   x = ${p.x},  f(x) = ${p.y}\n`);
+    } else report += `   לא נמצאו בתחום\n`;
+
+    resultEl.textContent = report;
+    resultEl.classList.add('show');
+
+    // Plot
+    const plotYs = validXs.map(x => { try { return f(x); } catch { return null; } });
+
+    const traces = [{
+      x: validXs, y: plotYs,
+      mode: 'lines', name: `f(x)`,
+      line: { color: '#00d4d4', width: 2.5 },
+      connectgaps: false,
+    }];
+
+    if (critPts.length) traces.push({
+      x: critPts.map(p=>p.x), y: critPts.map(p=>p.y),
+      mode: 'markers+text', name: 'קיצון',
+      marker: { color: '#a6e3a1', size: 10, symbol: 'circle' },
+      text: critPts.map(p=>p.type), textposition: 'top center',
+      textfont: { color: '#a6e3a1', size: 11 },
+    });
+
+    if (inflPts.length) traces.push({
+      x: inflPts.map(p=>p.x), y: inflPts.map(p=>p.y),
+      mode: 'markers', name: 'פיתול',
+      marker: { color: '#fab387', size: 9, symbol: 'diamond' },
+    });
+
+    if (xInter.length) traces.push({
+      x: xInter, y: xInter.map(()=>0),
+      mode: 'markers', name: 'חיתוך x',
+      marker: { color: '#89b4fa', size: 9, symbol: 'x' },
+    });
+
+    window.Plotly.newPlot(plotEl, traces, {
+      paper_bgcolor: '#111827',
+      plot_bgcolor:  '#111827',
+      font: { color: '#e0e0ff', size: 11 },
+      xaxis: { gridcolor: '#1e2a3a', zerolinecolor: '#3b4a6b', color: '#e0e0ff' },
+      yaxis: { gridcolor: '#1e2a3a', zerolinecolor: '#3b4a6b', color: '#e0e0ff' },
+      margin: { l: 45, r: 20, t: 30, b: 40 },
+      legend: { bgcolor: 'rgba(0,0,0,0)', font: { color: '#e0e0ff' } },
+      showlegend: true,
+    }, { responsive: true, displayModeBar: false });
+
+    plotEl.classList.add('show');
+
+  } catch (err) {
+    resultEl.innerHTML = `<span style="color:#f38ba8">שגיאה: ${err.message}</span>`;
+    resultEl.classList.add('show');
+  }
+}
+
+// ── Service Worker registration ───────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

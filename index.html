@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#7c3aed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="נויה">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="Noya.png">
+<title>מחשבון נויה</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; overflow: hidden;
+  background: #04030f;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  touch-action: manipulation; user-select: none;
+}
+
+/* ══ Starfield ══════════════════════════════════════════ */
+#universe {
+  position: fixed; inset: 0; z-index: 0; overflow: hidden;
+  background:
+    radial-gradient(ellipse at 15% 40%, rgba(124,58,237,0.32) 0%, transparent 52%),
+    radial-gradient(ellipse at 85% 15%, rgba(0,212,212,0.20) 0%, transparent 42%),
+    radial-gradient(ellipse at 55% 85%, rgba(168,85,247,0.20) 0%, transparent 42%),
+    #04030f;
+}
+/* subtle tech grid */
+#universe::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(124,58,237,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,58,237,0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, black 20%, transparent 80%);
+  pointer-events: none;
+}
+.star {
+  position: absolute; border-radius: 50%;
+  animation: twinkle ease-in-out infinite;
+}
+@keyframes twinkle { 0%,100%{opacity:.12;transform:scale(1)} 50%{opacity:1;transform:scale(1.8)} }
+.msym {
+  position: absolute; font-family: 'Orbitron', monospace;
+  color: rgba(168,85,247,0.28); pointer-events: none;
+  animation: floatUp linear infinite;
+  text-shadow: 0 0 12px rgba(168,85,247,0.5);
+}
+@keyframes floatUp {
+  from { transform: translateY(108vh) rotate(0deg); opacity: 0; }
+  8%   { opacity: 1; }
+  92%  { opacity: .7; }
+  to   { transform: translateY(-8vh) rotate(380deg); opacity: 0; }
+}
+
+/* ══ Splash ════════════════════════════════════════════ */
+#splash {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; transition: opacity .7s ease;
+}
+#splash.hide { opacity: 0; pointer-events: none; }
+
+.splash-halo {
+  position: absolute; border-radius: 50%;
+  border: 1px solid rgba(124,58,237,.3);
+  animation: haloExpand 4s ease-out infinite;
+}
+@keyframes haloExpand {
+  0%   { width:260px; height:260px; opacity:.7; }
+  100% { width:560px; height:560px; opacity:0; }
+}
+.splash-glow-orb {
+  position: absolute; width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,58,237,.35) 0%, transparent 70%);
+  animation: orbPulse 3s ease-in-out infinite;
+}
+@keyframes orbPulse { 0%,100%{transform:scale(1);opacity:.6} 50%{transform:scale(1.25);opacity:1} }
+
+#splashImg {
+  width: min(260px, 62vw);
+  border-radius: 50%;
+  position: relative; z-index: 2;
+  border: 3px solid rgba(0,212,212,.5);
+  box-shadow:
+    0 0 0 8px  rgba(124,58,237,.18),
+    0 0 50px   rgba(124,58,237,.8),
+    0 0 100px  rgba(0,212,212,.35),
+    0 0 160px  rgba(168,85,247,.2);
+  animation: imgGlow 3s ease-in-out infinite;
+}
+@keyframes imgGlow {
+  0%,100%{ box-shadow:0 0 0 8px rgba(124,58,237,.18),0 0 50px rgba(124,58,237,.8),0 0 100px rgba(0,212,212,.35); }
+  50%    { box-shadow:0 0 0 14px rgba(124,58,237,.28),0 0 80px rgba(124,58,237,1),0 0 150px rgba(0,212,212,.55); }
+}
+#splash h1 {
+  font-family:'Orbitron',monospace; font-weight:900;
+  font-size: clamp(2.2rem,7.5vw,3.6rem);
+  background: linear-gradient(135deg,#00d4d4 0%,#e0b0ff 45%,#7c3aed 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  margin-top:22px; letter-spacing:4px; position:relative; z-index:2;
+}
+#splash p {
+  color:rgba(200,200,255,.5); font-size:clamp(.8rem,2.5vw,.95rem);
+  margin-top:9px; letter-spacing:1.5px; z-index:2; position:relative;
+}
+.tap-hint {
+  position:absolute; bottom:38px;
+  font-size:.75rem; color:rgba(255,255,255,.25); letter-spacing:1px;
+  animation:blink 2.5s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:.15} 50%{opacity:.65} }
+@keyframes ripple { to { transform:scale(1); opacity:0; } }
+
+/* ══ Calculator Card ══════════════════════════════════ */
+#cardWrap {
+  position: relative; z-index: 10;
+  width: min(430px, 97vw);
+  height: min(800px, 97vh);
+  border-radius: 28px;
+  padding: 1.5px;
+  background: linear-gradient(135deg, #00d4d4, #7c3aed 40%, #a855f7 70%, #00d4d4);
+  background-size: 300% 300%;
+  animation: borderShift 5s linear infinite;
+  box-shadow:
+    0 0 20px rgba(124,58,237,.55),
+    0 0 50px rgba(124,58,237,.20),
+    0 0 90px rgba(0,212,212,.12),
+    0 28px 70px rgba(0,0,0,.7);
+}
+@keyframes borderShift {
+  0%  { background-position:0% 50%; }
+  50% { background-position:100% 50%; }
+  100%{ background-position:0% 50%; }
+}
+
+#app {
+  width: 100%; height: 100%;
+  border-radius: 27px;
+  background: rgba(7,5,22,.92);
+  backdrop-filter: blur(28px);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* ══ Display ═══════════════════════════════════════════ */
+.display-wrap {
+  position: relative;
+  background: linear-gradient(160deg, rgba(22,16,60,.97) 0%, rgba(8,5,26,.97) 100%);
+  border-bottom: 1px solid rgba(124,58,237,.3);
+  padding: 14px 16px 12px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+/* Noya watermark */
+.display-wrap::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: url('Noya.png') center/contain no-repeat;
+  opacity: 0.055;
+  filter: blur(1px);
+  pointer-events: none;
+}
+/* scanline effect */
+.display-wrap .scanlines {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,0.08) 3px,
+    rgba(0,0,0,0.08) 4px
+  );
+}
+/* glow line at bottom */
+.display-wrap::after {
+  content:''; position:absolute; bottom:0; left:8%; right:8%; height:1px;
+  background: linear-gradient(90deg, transparent, rgba(0,212,212,.6), transparent);
+}
+
+.display-inner { position: relative; z-index: 1; }
+
+.display-expr {
+  font-size: clamp(.68rem,2vw,.82rem);
+  color: rgba(168,85,247,.75);
+  min-height: 1.1em;
+  font-family: 'Orbitron', monospace;
+  letter-spacing: 1px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.display-main {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(2rem,10vw,3.4rem);
+  font-weight: 700; letter-spacing: 2px;
+  background: linear-gradient(135deg, #ffffff 0%, #c0d8ff 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  line-height: 1.1; padding-top: 2px;
+}
+.display-main.error {
+  background: none; -webkit-text-fill-color: #f38ba8;
+  font-size: clamp(.88rem,3.5vw,1.25rem);
+}
+
+/* ══ Buttons ════════════════════════════════════════════ */
+.btn-grid {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  gap: 7px; padding: 10px 10px 12px;
+  flex: 1; overflow: hidden;
+}
+.btn {
+  position: relative; border: none; border-radius: 14px;
+  font-size: clamp(.82rem,3.2vw,1.15rem); font-weight: 700;
+  cursor: pointer; min-height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent; letter-spacing: .3px;
+  overflow: hidden; transition: transform .08s, box-shadow .08s;
+}
+/* glass sheen */
+.btn::before {
+  content:''; position:absolute; inset:0; border-radius:inherit;
+  background: linear-gradient(135deg,rgba(255,255,255,.13) 0%,transparent 55%);
+  pointer-events:none;
+}
+.btn:active { transform:scale(.9); }
+
+.btn-num {
+  background: rgba(25,20,65,.85);
+  border: 1px solid rgba(100,80,200,.22);
+  color: #d8d8ff;
+  box-shadow: 0 2px 6px rgba(0,0,0,.35);
+}
+.btn-num:active { box-shadow: 0 0 18px rgba(124,58,237,.5); }
+
+.btn-op {
+  background: linear-gradient(140deg, rgba(124,58,237,.88), rgba(109,40,217,.88));
+  border: 1px solid rgba(167,139,250,.28);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(124,58,237,.28);
+}
+.btn-op:active { box-shadow: 0 0 22px rgba(124,58,237,.9); }
+
+.btn-eq {
+  background: linear-gradient(140deg, #00d4d4, #0891b2);
+  border: 1px solid rgba(0,212,212,.4);
+  color: #020a10; font-size: clamp(1rem,3.5vw,1.35rem);
+  box-shadow: 0 2px 14px rgba(0,212,212,.32);
+}
+.btn-eq:active { box-shadow: 0 0 28px rgba(0,212,212,.9); }
+
+.btn-clear {
+  background: linear-gradient(140deg, rgba(220,38,38,.88),rgba(185,28,28,.88));
+  border: 1px solid rgba(248,113,113,.28);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(220,38,38,.28);
+}
+.btn-clear:active { box-shadow: 0 0 22px rgba(220,38,38,.9); }
+
+.btn-del {
+  background: linear-gradient(140deg,rgba(159,18,57,.85),rgba(136,19,55,.85));
+  border: 1px solid rgba(251,113,133,.25);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(159,18,57,.28);
+}
+
+.btn-quad {
+  background: linear-gradient(140deg,rgba(217,119,6,.9),rgba(180,83,9,.9));
+  border: 1px solid rgba(251,191,36,.28);
+  color: #fff; font-size: clamp(.72rem,2.2vw,.98rem);
+  box-shadow: 0 2px 10px rgba(217,119,6,.28);
+}
+.btn-quad:active { box-shadow: 0 0 22px rgba(251,191,36,.8); }
+
+.btn-form {
+  background: linear-gradient(140deg,rgba(168,85,247,.9),rgba(124,58,237,.9));
+  border: 1px solid rgba(216,180,254,.25);
+  color: #fff; font-size: clamp(.66rem,2vw,.88rem);
+  box-shadow: 0 2px 10px rgba(168,85,247,.28);
+}
+.btn-form:active { box-shadow: 0 0 22px rgba(168,85,247,.9); }
+
+.btn-func {
+  background: linear-gradient(140deg,rgba(8,145,178,.9),rgba(14,116,144,.9));
+  border: 1px solid rgba(103,232,249,.25);
+  color: #fff; font-size: clamp(.66rem,2vw,.88rem);
+  box-shadow: 0 2px 10px rgba(8,145,178,.28);
+}
+.btn-func:active { box-shadow: 0 0 22px rgba(0,212,212,.9); }
+
+.btn-wide { grid-column: span 2; }
+
+/* ══ Panels ═════════════════════════════════════════════ */
+.panel {
+  position: absolute; inset: 0; z-index: 200;
+  background: rgba(6,4,18,.97);
+  backdrop-filter: blur(28px);
+  border-radius: 27px;
+  display: none; flex-direction: column; overflow: hidden;
+}
+.panel.open { display: flex; }
+
+.panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px;
+  background: linear-gradient(135deg,rgba(20,15,55,.95),rgba(8,5,24,.95));
+  border-bottom: 1px solid rgba(124,58,237,.3);
+  flex-shrink: 0;
+}
+.panel-title {
+  font-family:'Orbitron',monospace;
+  font-size: clamp(.88rem,3vw,1.15rem); font-weight:700;
+  background: linear-gradient(135deg,#00d4d4,#a855f7);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.btn-close {
+  background:rgba(220,38,38,.15); border:1px solid rgba(220,38,38,.35);
+  color:#f38ba8; border-radius:8px; width:34px; height:34px;
+  font-size:1.1rem; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .2s;
+}
+.btn-close:hover { background:rgba(220,38,38,.3); }
+
+/* formula */
+.formula-tabs {
+  display:flex; overflow-x:auto; gap:6px;
+  padding:10px 12px; flex-shrink:0; scrollbar-width:none;
+}
+.formula-tabs::-webkit-scrollbar { display:none; }
+.tab-btn {
+  background:rgba(25,20,65,.6); border:1px solid rgba(124,58,237,.22);
+  color:rgba(200,200,255,.65); border-radius:20px;
+  padding:6px 14px; white-space:nowrap; cursor:pointer;
+  font-size:clamp(.67rem,2vw,.8rem); transition:all .2s;
+}
+.tab-btn.active {
+  background:linear-gradient(135deg,#7c3aed,#a855f7);
+  color:#fff; border-color:#a855f7;
+  box-shadow:0 0 14px rgba(168,85,247,.4);
+}
+.search-wrap { padding:0 12px 8px; flex-shrink:0; }
+.search-input {
+  width:100%; background:rgba(25,20,65,.6);
+  border:1px solid rgba(124,58,237,.28); color:#e0e0ff;
+  border-radius:10px; padding:9px 14px; font-size:.92rem;
+  outline:none; transition:border-color .2s,box-shadow .2s;
+}
+.search-input:focus { border-color:#7c3aed; box-shadow:0 0 0 2px rgba(124,58,237,.18); }
+.search-input::placeholder { color:rgba(200,200,255,.28); }
+.formula-list {
+  flex:1; overflow-y:auto; padding:0 12px 12px;
+  scrollbar-width:thin; scrollbar-color:rgba(124,58,237,.35) transparent;
+}
+.formula-card {
+  background:rgba(25,20,65,.45); border:1px solid rgba(124,58,237,.17);
+  border-radius:12px; padding:11px 14px; margin-bottom:7px; cursor:pointer;
+  transition:all .18s; backdrop-filter:blur(6px);
+}
+.formula-card:hover,.formula-card:active {
+  border-color:rgba(168,85,247,.5);
+  background:rgba(168,85,247,.12);
+  box-shadow:0 0 18px rgba(168,85,247,.15);
+}
+.formula-tag { font-size:.67rem; color:#a855f7; letter-spacing:.5px; margin-bottom:4px; text-transform:uppercase; }
+.formula-text { font-family:'Courier New',monospace; font-size:clamp(.8rem,2.3vw,.95rem); color:#c0d0ff; direction:ltr; text-align:left; }
+
+/* quadratic */
+/* ── Quadratic panel ── */
+.quad-body { flex:1; overflow-y:auto; padding:16px 18px; display:flex; flex-direction:column; gap:12px; }
+
+.quad-eq-banner {
+  background: linear-gradient(135deg, rgba(168,85,247,.15), rgba(124,58,237,.08));
+  border: 1px solid rgba(168,85,247,.25);
+  border-radius: 14px; padding: 14px;
+  text-align: center;
+}
+.quad-eq-banner .eq-main {
+  font-family:'Orbitron',monospace; font-size:clamp(1rem,3.5vw,1.2rem);
+  background: linear-gradient(135deg,#c084fc,#818cf8);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  letter-spacing:1px;
+}
+.quad-eq-banner .eq-hint {
+  font-size:.72rem; color:rgba(200,200,255,.35); margin-top:4px; letter-spacing:.5px;
+}
+
+.coef-row {
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;
+}
+.coef-block {
+  background:rgba(25,20,65,.6); border:1px solid rgba(124,58,237,.28);
+  border-radius:12px; padding:10px 8px;
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  transition:border-color .2s, box-shadow .2s;
+}
+.coef-block:focus-within {
+  border-color:#a855f7; box-shadow:0 0 0 2px rgba(168,85,247,.18);
+}
+.coef-block label {
+  font-family:'Orbitron',monospace; font-size:.72rem;
+  color:#a855f7; letter-spacing:1px; font-weight:700;
+}
+.coef-input {
+  width:100%; background:transparent; border:none;
+  color:#e0e0ff; font-size:1.1rem; font-weight:700;
+  outline:none; text-align:center; font-family:'Orbitron',monospace;
+}
+
+.solve-btn {
+  background:linear-gradient(135deg,#d97706,#b45309); color:#fff;
+  border:none; border-radius:12px; padding:13px; font-size:1rem;
+  font-weight:700; cursor:pointer; width:100%; letter-spacing:1.5px;
+  box-shadow:0 4px 16px rgba(217,119,6,.3); transition:transform .1s, box-shadow .1s;
+  position:relative; overflow:hidden;
+}
+.solve-btn:active { transform:scale(.97); box-shadow:0 0 24px rgba(217,119,6,.6); }
+
+.quad-result {
+  border-radius:14px; backdrop-filter:blur(6px); display:none; overflow:hidden;
+}
+.quad-result.show { display:block; }
+
+.disc-badge {
+  padding:10px 16px;
+  display:flex; align-items:center; gap:10px;
+  font-family:'Orbitron',monospace; font-size:.82rem;
+}
+.disc-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0; }
+.quad-solution {
+  background:rgba(12,9,36,.7); padding:14px 16px;
+  font-family:'Courier New',monospace;
+  font-size:clamp(.88rem,2.5vw,1rem); line-height:2;
+}
+.q-label { color:#89b4fa; font-size:.75rem; text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:2px; }
+.q-val   { color:#a6e3a1; font-size:1.05rem; font-weight:700; font-family:'Orbitron',monospace; }
+.q-complex { color:#f38ba8; }
+
+/* ── Function panel ── */
+.func-body { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:12px; }
+.func-input-row { display:flex; gap:8px; align-items:center; }
+.func-label { color:#89b4fa; font-weight:700; font-size:1rem; white-space:nowrap; font-family:'Orbitron',monospace; }
+.func-input {
+  flex:1; background:rgba(25,20,65,.6); border:1px solid rgba(137,180,250,.32);
+  color:#e0e0ff; border-radius:10px; padding:10px 14px; font-size:.95rem;
+  outline:none; direction:ltr; font-family:'Courier New',monospace;
+  transition:border-color .2s;
+}
+.func-input:focus { border-color:#89b4fa; box-shadow:0 0 0 2px rgba(137,180,250,.14); }
+.analyze-btn {
+  background:linear-gradient(135deg,#0891b2,#0e7490); color:#fff;
+  border:none; border-radius:10px; padding:10px 15px;
+  font-size:.93rem; font-weight:700; cursor:pointer; white-space:nowrap;
+  box-shadow:0 2px 12px rgba(8,145,178,.3);
+}
+.func-examples { color:rgba(200,200,255,.32); font-size:.7rem; text-align:center; direction:ltr; }
+.spinner { display:none; text-align:center; padding:24px; color:#7c3aed; font-size:2rem; animation:spin .8s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.spinner.show { display:block; }
+.func-result { display:none; }
+.func-result.show { display:flex; flex-direction:column; gap:8px; }
+
+.fr-card {
+  border-radius:12px; overflow:hidden;
+  border: 1px solid rgba(255,255,255,.07);
+  backdrop-filter:blur(8px);
+}
+.fr-card-header {
+  padding:8px 14px;
+  font-size:.7rem; font-weight:700; letter-spacing:1.5px;
+  text-transform:uppercase; display:flex; align-items:center; gap:8px;
+}
+.fr-card-body {
+  background:rgba(8,6,22,.65);
+  padding:10px 14px;
+  font-family:'Courier New',monospace;
+  font-size:clamp(.76rem,2vw,.88rem);
+  line-height:1.9; direction:ltr; text-align:left;
+  color:#c8d8ff;
+}
+.fr-card-body .lbl { color:rgba(200,200,255,.45); font-size:.75rem; }
+.fr-card-body .val { color:#a6e3a1; font-weight:600; }
+.fr-card-body .sym { color:#cba6f7; }
+.fr-card-body .expr { color:#89b4fa; font-style:italic; word-break:break-all; }
+.fr-card-body .warn { color:#fab387; }
+.fr-card-body .none { color:rgba(200,200,255,.35); font-style:italic; }
+
+/* card accent colors */
+.fr-domain  { background:linear-gradient(135deg,rgba(139,92,246,.25),rgba(109,40,217,.12)); }
+.fr-domain .fr-card-header { background:rgba(139,92,246,.2); color:#c084fc; }
+.fr-asympt  { background:linear-gradient(135deg,rgba(248,113,133,.18),rgba(220,38,38,.08)); }
+.fr-asympt .fr-card-header { background:rgba(248,113,133,.15); color:#fca5a5; }
+.fr-inter   { background:linear-gradient(135deg,rgba(96,165,250,.18),rgba(37,99,235,.08)); }
+.fr-inter .fr-card-header { background:rgba(96,165,250,.15); color:#93c5fd; }
+.fr-d1      { background:linear-gradient(135deg,rgba(52,211,153,.18),rgba(16,185,129,.08)); }
+.fr-d1 .fr-card-header { background:rgba(52,211,153,.15); color:#6ee7b7; }
+.fr-d2      { background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(217,119,6,.08)); }
+.fr-d2 .fr-card-header { background:rgba(251,191,36,.15); color:#fde68a; }
+#plotDiv {
+  border-radius:14px; overflow:hidden;
+  border:1px solid rgba(137,180,250,.14);
+  display:none; height:300px; flex-shrink:0;
+  background:#050a15;
+  box-shadow:0 4px 24px rgba(0,0,0,.5);
+}
+#plotDiv.show { display:block; }
+#plotDiv.show { display:block; }
+
+/* toast */
+.copy-toast {
+  position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+  background:linear-gradient(135deg,#00d4d4,#0891b2);
+  color:#020a10; padding:10px 26px; border-radius:20px;
+  font-weight:700; font-size:.87rem; z-index:9999;
+  opacity:0; transition:opacity .25s; pointer-events:none;
+  box-shadow:0 4px 20px rgba(0,212,212,.4);
+}
+.copy-toast.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<!-- Universe background -->
+<div id="universe"></div>
+
+<!-- Splash -->
+<div id="splash" onclick="dismissSplash()">
+  <div class="splash-halo" style="animation-delay:0s"></div>
+  <div class="splash-halo" style="animation-delay:1.3s"></div>
+  <div class="splash-halo" style="animation-delay:2.6s"></div>
+  <div class="splash-glow-orb"></div>
+  <img id="splashImg" src="Noya.png" alt="נויה">
+  <h1>נויה</h1>
+  <p>מחשבון בגרות מתמטיקה 5 יחידות</p>
+  <div class="tap-hint">לחץ להמשך ✦</div>
+</div>
+
+<!-- Calculator card -->
+<div id="cardWrap">
+  <div id="app">
+
+    <!-- Display -->
+    <div class="display-wrap">
+      <div class="scanlines"></div>
+      <div class="display-inner">
+        <div class="display-expr" id="exprDisplay"></div>
+        <div class="display-main" id="mainDisplay">0</div>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="btn-grid">
+      <button class="btn btn-form" onclick="openPanel('formulaPanel')">נוסחאות</button>
+      <button class="btn btn-quad" onclick="openPanel('quadPanel')">x²</button>
+      <button class="btn btn-func" onclick="openPanel('funcPanel')">חקר f(x)</button>
+      <button class="btn btn-del"  onclick="delChar()">⌫</button>
+
+      <button class="btn btn-clear" onclick="clearAll()">C</button>
+      <button class="btn btn-op"   onclick="inputOp('%')">%</button>
+      <button class="btn btn-op"   onclick="toggleSign()">+/−</button>
+      <button class="btn btn-op"   onclick="inputOp('/')">÷</button>
+
+      <button class="btn btn-num" onclick="inputDigit('7')">7</button>
+      <button class="btn btn-num" onclick="inputDigit('8')">8</button>
+      <button class="btn btn-num" onclick="inputDigit('9')">9</button>
+      <button class="btn btn-op"  onclick="inputOp('*')">×</button>
+
+      <button class="btn btn-num" onclick="inputDigit('4')">4</button>
+      <button class="btn btn-num" onclick="inputDigit('5')">5</button>
+      <button class="btn btn-num" onclick="inputDigit('6')">6</button>
+      <button class="btn btn-op"  onclick="inputOp('-')">−</button>
+
+      <button class="btn btn-num" onclick="inputDigit('1')">1</button>
+      <button class="btn btn-num" onclick="inputDigit('2')">2</button>
+      <button class="btn btn-num" onclick="inputDigit('3')">3</button>
+      <button class="btn btn-op"  onclick="inputOp('+')">+</button>
+
+      <button class="btn btn-num btn-wide" onclick="inputDigit('0')">0</button>
+      <button class="btn btn-num" onclick="inputDot()">.</button>
+      <button class="btn btn-eq"  onclick="calculate()">=</button>
+    </div>
+
+  <!-- Formula Panel -->
+  <div class="panel" id="formulaPanel">
+    <div class="panel-header">
+      <span class="panel-title">📐 דף נוסחאות — בגרות 5 יח'</span>
+      <button class="btn-close" onclick="closePanel('formulaPanel')">✕</button>
+    </div>
+    <div class="formula-tabs" id="formulaTabs"></div>
+    <div class="search-wrap">
+      <input class="search-input" id="formulaSearch" placeholder="🔍  חיפוש נוסחה..." oninput="filterFormulas()">
+    </div>
+    <div class="formula-list" id="formulaList"></div>
+  </div>
+
+  <!-- Quadratic Panel -->
+  <div class="panel" id="quadPanel">
+    <div class="panel-header">
+      <span class="panel-title">✏️ משוואה ריבועית</span>
+      <button class="btn-close" onclick="closePanel('quadPanel')">✕</button>
+    </div>
+    <div class="quad-body">
+      <div class="quad-eq-banner">
+        <div class="eq-main">ax² + bx + c = 0</div>
+        <div class="eq-hint">הזן את המקדמים ולחץ פתור</div>
+      </div>
+      <div class="coef-row">
+        <div class="coef-block"><label>a</label><input class="coef-input" id="qa" type="number" value="1"></div>
+        <div class="coef-block"><label>b</label><input class="coef-input" id="qb" type="number" value="0"></div>
+        <div class="coef-block"><label>c</label><input class="coef-input" id="qc" type="number" value="0"></div>
+      </div>
+      <button class="solve-btn" onclick="solveQuad()">פתור</button>
+      <div class="quad-result" id="quadResult"></div>
+    </div>
+  </div>
+
+  <!-- Function Panel -->
+  <div class="panel" id="funcPanel">
+    <div class="panel-header">
+      <span class="panel-title">🔍 חקר פונקציה</span>
+      <button class="btn-close" onclick="closePanel('funcPanel')">✕</button>
+    </div>
+    <div class="func-body">
+      <div class="func-input-row">
+        <span class="func-label">f(x) =</span>
+        <input class="func-input" id="funcInput" placeholder="x^3 - 3*x + 2" value="x^3 - 3*x + 2">
+        <button class="analyze-btn" onclick="analyzeFunc()">חקור</button>
+      </div>
+      <div class="func-examples">דוגמאות: x^3-3*x+2 | sin(x) | 1/(x-1) | exp(x) | log(x) | sqrt(x)</div>
+      <div class="spinner" id="funcSpinner">⟳</div>
+      <div class="func-result" id="funcResult"></div>
+      <div id="plotDiv"></div>
+    </div>
+  </div>
+
+  </div><!-- end #app -->
+</div><!-- end #cardWrap -->
+
+<div class="copy-toast" id="copyToast">הועתק! ✓</div>
+
+<script>
+// ══ Universe ════════════════════════════════════════════
+const uni = document.getElementById('universe');
+const starColors = ['#ffffff','#ffffff','#ffffff','#c0d8ff','#b8aaff','#00d4d4'];
+for (let i=0;i<110;i++) {
+  const s = document.createElement('div'); s.className='star';
+  const sz = Math.random()<0.15 ? Math.random()*2+2.2 : Math.random()*1.8+0.4;
+  const col = starColors[Math.floor(Math.random()*starColors.length)];
+  s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;background:${col};animation-duration:${1.5+Math.random()*5}s;animation-delay:${-Math.random()*7}s;`;
+  uni.appendChild(s);
+}
+const SYMS=['π','∫','∑','√','∞','Δ','∂','θ','α','β','λ','∇','≠','σ','φ'];
+for (let i=0;i<16;i++) {
+  const el=document.createElement('div'); el.className='msym';
+  el.textContent=SYMS[i%SYMS.length];
+  const sz = 14+Math.random()*26;
+  el.style.cssText=`left:${Math.random()*100}%;font-size:${sz}px;animation-duration:${11+Math.random()*18}s;animation-delay:${-Math.random()*26}s;`;
+  uni.appendChild(el);
+}
+
+// ── Ripple effect ──────────────────────────────────────
+document.querySelectorAll('.btn').forEach(btn => {
+  btn.addEventListener('pointerdown', e => {
+    const r = document.createElement('span');
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height) * 1.6;
+    r.style.cssText = `
+      position:absolute; border-radius:50%; pointer-events:none;
+      width:${size}px; height:${size}px;
+      left:${e.clientX - rect.left - size/2}px;
+      top:${e.clientY - rect.top - size/2}px;
+      background:rgba(255,255,255,0.18);
+      transform:scale(0); animation:ripple 0.5s ease-out forwards;
+    `;
+    btn.appendChild(r);
+    setTimeout(() => r.remove(), 520);
+  });
+});
+
+// ══ Splash ══════════════════════════════════════════════
+let splashDone=false;
+function dismissSplash(){
+  if(splashDone)return; splashDone=true;
+  const s=document.getElementById('splash');
+  s.classList.add('hide'); setTimeout(()=>s.style.display='none',750);
+}
+setTimeout(dismissSplash,4000);
+
+// ══ Calculator ══════════════════════════════════════════
+let current='0',stored=null,operator=null,freshNum=true,justCalc=false;
+function updateDisplay(expr=''){
+  const md=document.getElementById('mainDisplay');
+  md.textContent=current; md.className='display-main';
+  document.getElementById('exprDisplay').textContent=expr;
+}
+function inputDigit(d){
+  if(justCalc){current=d;freshNum=false;justCalc=false;}
+  else if(freshNum){current=d;freshNum=false;}
+  else{if(current.length>=15)return;current=current==='0'?d:current+d;}
+  updateDisplay();
+}
+function inputDot(){
+  if(justCalc||freshNum){current='0.';freshNum=false;justCalc=false;}
+  else if(!current.includes('.'))current+='.';
+  updateDisplay();
+}
+function inputOp(op){
+  if(!justCalc&&operator&&!freshNum)runCalc();
+  stored=parseFloat(current);operator=op;freshNum=true;justCalc=false;
+  const sym={'+':'+','-':'−','*':'×','/':'÷','%':'%'};
+  updateDisplay(`${stored} ${sym[op]||op}`);
+}
+function runCalc(){
+  if(stored===null||operator===null)return;
+  const b=parseFloat(current);
+  try{
+    let res;
+    switch(operator){
+      case'+':res=stored+b;break; case'-':res=stored-b;break;
+      case'*':res=stored*b;break;
+      case'/':if(!b)throw new Error('חלוקה באפס!');res=stored/b;break;
+      case'%':res=stored%b;break;
+    }
+    if(!isFinite(res))throw new Error('תוצאה לא חוקית');
+    current=parseFloat(res.toPrecision(12)).toString();
+  }catch(e){
+    const md=document.getElementById('mainDisplay');
+    md.textContent=e.message;md.className='display-main error';
+    current='0';stored=null;operator=null;freshNum=true;
+  }
+}
+function calculate(){
+  if(!operator)return;
+  const sym={'+':'+','-':'−','*':'×','/':'÷','%':'%'};
+  const expr=`${stored} ${sym[operator]||operator} ${current}`;
+  runCalc();stored=null;operator=null;freshNum=true;justCalc=true;
+  updateDisplay(expr+' =');
+}
+function clearAll(){current='0';stored=null;operator=null;freshNum=true;justCalc=false;updateDisplay();}
+function delChar(){
+  if(justCalc||freshNum){clearAll();return;}
+  current=current.slice(0,-1)||'0'; updateDisplay();
+}
+function toggleSign(){
+  if(current!=='0')current=current.startsWith('-')?current.slice(1):'-'+current;
+  updateDisplay();
+}
+
+// ══ Panels ══════════════════════════════════════════════
+function openPanel(id){document.getElementById(id).classList.add('open');if(id==='formulaPanel')initFormulas();}
+function closePanel(id){document.getElementById(id).classList.remove('open');}
+
+// ══ Formulas ════════════════════════════════════════════
+const FORMULAS={
+  'אלגברה':[
+    ['כפל מקוצר','(a+b)² = a² + 2ab + b²'],['כפל מקוצר','(a-b)² = a² - 2ab + b²'],
+    ['כפל מקוצר','(a+b)(a-b) = a² - b²'],['כפל מקוצר','(a+b)³ = a³ + 3a²b + 3ab² + b³'],
+    ['כפל מקוצר','(a-b)³ = a³ - 3a²b + 3ab² - b³'],
+    ['משוואה ריבועית','x = (-b ± √(b²-4ac)) / 2a'],['דיסקרימיננטה','Δ = b² - 4ac'],
+    ['לוגריתמים','logₐ(xy) = logₐx + logₐy'],['לוגריתמים','logₐ(x/y) = logₐx - logₐy'],
+    ['לוגריתמים','logₐ(xⁿ) = n·logₐx'],['לוגריתמים','logₐb = log(b) / log(a)'],
+    ['חזקות','aᵐ · aⁿ = aᵐ⁺ⁿ'],['חזקות','(aᵐ)ⁿ = aᵐⁿ'],['חזקות','a⁻ⁿ = 1/aⁿ'],['חזקות','√a = a^(1/2)'],
+  ],
+  'סדרות':[
+    ['סדרה חשבונית','aₙ = a₁ + (n-1)d'],['סדרה חשבונית','Sₙ = n·(a₁ + aₙ)/2'],
+    ['סדרה חשבונית','Sₙ = n·(2a₁ + (n-1)d) / 2'],['סדרה הנדסית','aₙ = a₁ · qⁿ⁻¹'],
+    ['סדרה הנדסית','Sₙ = a₁·(qⁿ - 1) / (q - 1)   [q ≠ 1]'],
+    ['סדרה הנדסית','S∞ = a₁ / (1 - q)   [|q| < 1]'],
+    ['צמיחה ודעיכה','A(t) = A₀ · (1 + r)ᵗ'],['צמיחה ודעיכה','A(t) = A₀ · eᵏᵗ'],
+  ],
+  'טריגונומטריה':[
+    ['זהויות יסוד','sin²x + cos²x = 1'],['זהויות יסוד','tan x = sin x / cos x'],
+    ['זהויות יסוד','1 + tan²x = 1/cos²x'],['זוויות כפולות','sin(2x) = 2·sin x·cos x'],
+    ['זוויות כפולות','cos(2x) = cos²x - sin²x'],['זוויות כפולות','cos(2x) = 1 - 2sin²x'],
+    ['סכום זוויות','sin(A±B) = sinA·cosB ± cosA·sinB'],
+    ['סכום זוויות','cos(A±B) = cosA·cosB ∓ sinA·sinB'],
+    ['משפטי מישור','a/sinA = b/sinB = c/sinC  (סינוסים)'],
+    ['משפטי מישור','a² = b²+c² - 2bc·cosA  (קוסינוסים)'],
+    ['שטחים','S△ = ½·a·b·sinC'],['קשת ומגזר','L = r·α   (אורך קשת, α בראדיאנים)'],
+    ['קשת ומגזר','S = ½·r²·α  (שטח מגזר)'],
+    ['ערכים מיוחדים','sin30°=½ , cos30°=√3/2 , tan30°=1/√3'],
+    ['ערכים מיוחדים','sin45°=√2/2 , cos45°=√2/2 , tan45°=1'],
+    ['ערכים מיוחדים','sin60°=√3/2 , cos60°=½ , tan60°=√3'],
+  ],
+  'גיאו\' אנליטית':[
+    ['מרחק ואמצע','d = √((x₂-x₁)² + (y₂-y₁)²)'],['מרחק ואמצע','M = ((x₁+x₂)/2 , (y₁+y₂)/2)'],
+    ['ישר','שיפוע: m = (y₂-y₁) / (x₂-x₁)'],['ישר','y = mx + b'],['ישר','y - y₁ = m(x - x₁)'],
+    ['ישר','ישרים מאונכים: m₁ · m₂ = -1'],['ישר','ישרים מקבילים: m₁ = m₂'],
+    ['מעגל','(x-a)² + (y-b)² = r²'],['מרחק נקודה-ישר','d = |ax₀ + by₀ + c| / √(a²+b²)'],
+    ['פרבולה','y = ax² + bx + c   ,   קודקוד: x = -b/2a'],
+  ],
+  'חדו"א':[
+    ['נגזרות יסוד',"(c)' = 0"],['נגזרות יסוד',"(xⁿ)' = n·xⁿ⁻¹"],
+    ['נגזרות יסוד',"(eˣ)' = eˣ"],['נגזרות יסוד',"(aˣ)' = aˣ·ln a"],
+    ['נגזרות יסוד',"(ln x)' = 1/x"],['נגזרות יסוד',"(sin x)' = cos x"],
+    ['נגזרות יסוד',"(cos x)' = -sin x"],['נגזרות יסוד',"(tan x)' = 1/cos²x"],
+    ['כללי נגזרת',"(u·v)' = u'v + uv'"],['כללי נגזרת',"(u/v)' = (u'v - uv') / v²"],
+    ['כללי נגזרת',"(f(g(x)))' = f'(g(x))·g'(x)  (כלל השרשרת)"],
+    ['אינטגרלים','∫xⁿ dx = xⁿ⁺¹/(n+1) + C   [n ≠ -1]'],
+    ['אינטגרלים','∫eˣ dx = eˣ + C'],['אינטגרלים','∫(1/x) dx = ln|x| + C'],
+    ['אינטגרלים','∫sin x dx = -cos x + C'],['אינטגרלים','∫cos x dx = sin x + C'],
+    ['אינטגרל מוגדר','∫[a→b] f(x)dx = F(b) - F(a)'],['שטח','S = ∫[a→b] |f(x)| dx'],
+    ['חקר פונקציה',"f'(x)=0  ←  נקודת קיצון אפשרית"],
+    ['חקר פונקציה',"f''(x)>0  ←  מינימום מקומי"],['חקר פונקציה',"f''(x)<0  ←  מקסימום מקומי"],
+    ['חקר פונקציה',"f''(x)=0  ←  נקודת פיתול אפשרית"],
+  ],
+  'וקטורים':[
+    ['אורך וקטור','|v| = √(a² + b² + c²)'],['מכפלה סקלרית','u·v = a₁a₂ + b₁b₂ + c₁c₂'],
+    ['זווית','cos θ = (u·v) / (|u|·|v|)'],['אנכיים/מקבילים','מאונכים: u·v = 0   |   מקבילים: u = k·v'],
+    ['מישור','ax + by + cz + d = 0   ,   נורמל: n=(a,b,c)'],
+    ['מרחק נקודה-מישור','d = |ax₀+by₀+cz₀+d| / √(a²+b²+c²)'],
+    ['זוויות','sin α = |n·v| / (|n|·|v|)  (ישר-מישור)'],
+    ['זוויות','cos θ = |n₁·n₂| / (|n₁|·|n₂|)  (מישור-מישור)'],
+  ],
+  'מספרים מרוכבים':[
+    ['הגדרה','i² = -1   ,   z = a + bi'],['ערך מוחלט','|z| = √(a² + b²)'],
+    ['צמוד','z̄ = a - bi'],['כפל','(a+bi)(c+di) = (ac-bd) + (ad+bc)i'],
+    ['חילוק','(a+bi)/(c+di) = [(a+bi)(c-di)] / (c²+d²)'],
+    ['צורה טריגונומטרית','z = r(cos θ + i·sin θ)   ,   r=|z|'],
+    ['כפל טריג\'','z₁·z₂ = r₁r₂[cos(θ₁+θ₂) + i·sin(θ₁+θ₂)]'],
+    ['משפט דה-מואבר','zⁿ = rⁿ(cos nθ + i·sin nθ)'],
+    ['שורשי יחידה','wₖ = cos(2πk/n) + i·sin(2πk/n)   k=0..n-1'],
+  ],
+};
+const CATS=Object.keys(FORMULAS);
+let activeTab=CATS[0],formulasInited=false;
+
+function initFormulas(){
+  if(formulasInited)return; formulasInited=true;
+  const tabs=document.getElementById('formulaTabs');
+  CATS.forEach(cat=>{
+    const b=document.createElement('button'); b.className='tab-btn'+(cat===activeTab?' active':'');
+    b.textContent=cat;
+    b.onclick=()=>{
+      activeTab=cat;
+      document.querySelectorAll('.tab-btn').forEach(x=>x.classList.toggle('active',x.textContent===cat));
+      document.getElementById('formulaSearch').value='';
+      renderFormulas();
+    };
+    tabs.appendChild(b);
+  });
+  renderFormulas();
+}
+function renderFormulas(filter=''){
+  const list=document.getElementById('formulaList'); list.innerHTML='';
+  const items=filter
+    ?CATS.flatMap(c=>FORMULAS[c]).filter(([tag,txt])=>txt.includes(filter)||tag.includes(filter))
+    :FORMULAS[activeTab];
+  if(!items.length){list.innerHTML='<div style="color:rgba(200,200,255,.32);text-align:center;padding:30px">לא נמצאו נוסחאות</div>';return;}
+  items.forEach(([tag,txt])=>{
+    const c=document.createElement('div'); c.className='formula-card';
+    c.innerHTML=`<div class="formula-tag">${tag}</div><div class="formula-text">${txt}</div>`;
+    c.onclick=()=>{
+      navigator.clipboard.writeText(txt).catch(()=>{});
+      const t=document.getElementById('copyToast');
+      t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800);
+    };
+    list.appendChild(c);
+  });
+}
+function filterFormulas(){renderFormulas(document.getElementById('formulaSearch').value.trim());}
+
+// ══ Quadratic ════════════════════════════════════════════
+function fmt(n){return parseFloat(n.toFixed(6)).toString();}
+function solveQuad(){
+  const a=+document.getElementById('qa').value;
+  const b=+document.getElementById('qb').value;
+  const c=+document.getElementById('qc').value;
+  const el=document.getElementById('quadResult');
+  if(isNaN(a)||isNaN(b)||isNaN(c)||!a){
+    el.innerHTML=`<div class="quad-solution" style="color:#f38ba8;text-align:center;padding:20px">
+      ${!a?'המקדם a לא יכול להיות 0':'הזן מספרים תקינים'}</div>`;
+    el.classList.add('show'); return;
+  }
+  const disc=b*b-4*a*c;
+  const sign=v=>v>=0?'+':'';
+  const eq=`${a}x² ${sign(b)}${b}x ${sign(c)}${c} = 0`;
+
+  let badgeColor, badgeBg, badgeDot, badgeText, solutionHTML;
+  if(disc>0){
+    badgeColor='#6ee7b7'; badgeBg='rgba(52,211,153,.12)'; badgeDot='#a6e3a1';
+    badgeText='Δ > 0 — שני פתרונות ממשיים';
+    const x1=(-b+Math.sqrt(disc))/(2*a), x2=(-b-Math.sqrt(disc))/(2*a);
+    solutionHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+        <div><span class="lbl">x₁</span><div class="val">${fmt(x1)}</div></div>
+        <div><span class="lbl">x₂</span><div class="val">${fmt(x2)}</div></div>
+      </div>`;
+  } else if(disc===0){
+    badgeColor='#fde68a'; badgeBg='rgba(251,191,36,.12)'; badgeDot='#fab387';
+    badgeText='Δ = 0 — פתרון יחיד (כפול)';
+    solutionHTML=`<div style="margin-top:4px"><span class="lbl">x</span><div class="val">${fmt(-b/(2*a))}</div></div>`;
+  } else {
+    badgeColor='#fca5a5'; badgeBg='rgba(248,113,133,.12)'; badgeDot='#f38ba8';
+    badgeText='Δ < 0 — פתרונות מרוכבים';
+    const re=-b/(2*a),im=Math.sqrt(-disc)/(2*a);
+    solutionHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+        <div><span class="lbl">x₁</span><div class="val q-complex">${fmt(re)} + ${fmt(im)}i</div></div>
+        <div><span class="lbl">x₂</span><div class="val q-complex">${fmt(re)} − ${fmt(im)}i</div></div>
+      </div>`;
+  }
+
+  el.innerHTML=`
+    <div class="disc-badge" style="background:${badgeBg};border-bottom:1px solid rgba(255,255,255,.06);color:${badgeColor}">
+      <div class="disc-dot" style="background:${badgeDot}"></div>
+      <span style="font-family:'Orbitron',monospace;font-size:.75rem;letter-spacing:.5px">${badgeText}</span>
+    </div>
+    <div class="quad-solution">
+      <div style="margin-bottom:10px">
+        <span class="lbl">המשוואה</span>
+        <span style="color:#c0d0ff;font-family:'Courier New',monospace">${eq}</span>
+      </div>
+      <div style="margin-bottom:10px">
+        <span class="lbl">דיסקרימיננטה</span>
+        <span style="color:${badgeColor};font-family:'Orbitron',monospace;font-weight:700">Δ = ${fmt(disc)}</span>
+      </div>
+      ${solutionHTML}
+    </div>`;
+  el.classList.add('show');
+}
+
+// ══ Function Analysis ════════════════════════════════════
+let mjsReady=false,mjsProm=null,plyReady=false,plyProm=null;
+function loadMJS(){
+  if(mjsReady)return Promise.resolve();
+  if(mjsProm)return mjsProm;
+  mjsProm=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/mathjs@13.2.0/lib/browser/math.js';
+    s.onload=()=>{mjsReady=true;res();};s.onerror=rej;
+    document.head.appendChild(s);
+  });
+  return mjsProm;
+}
+function loadPly(){
+  if(plyReady)return Promise.resolve();
+  if(plyProm)return plyProm;
+  plyProm=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.plot.ly/plotly-2.35.2.min.js';
+    s.onload=()=>{plyReady=true;res();};s.onerror=rej;
+    document.head.appendChild(s);
+  });
+  return plyProm;
+}
+function setSpinner(on){document.getElementById('funcSpinner').classList.toggle('show',on);}
+
+function fmtIntervals(ivs){
+  if(!ivs.length)return'אין';
+  return ivs.map(([a,b])=>`(${isFinite(a)?fmt(a):'-∞'}, ${isFinite(b)?fmt(b):'+∞'})`).join(' ∪ ');
+}
+
+async function analyzeFunc(){
+  const expr=document.getElementById('funcInput').value.trim();
+  if(!expr)return;
+  const resEl=document.getElementById('funcResult'),plotEl=document.getElementById('plotDiv');
+  resEl.classList.remove('show');plotEl.classList.remove('show');setSpinner(true);
+  try{await Promise.all([loadMJS(),loadPly()]);}
+  catch{setSpinner(false);resEl.innerHTML='<span style="color:#f38ba8">שגיאה בטעינת ספריות — בדוק חיבור לאינטרנט</span>';resEl.classList.add('show');return;}
+  setSpinner(false);
+  try{
+    const mjs=window.math;
+    let d1str='?',d2str='?',d1Node=null,d2Node=null;
+    try{
+      const fNode=mjs.parse(expr);
+      d1Node=mjs.derivative(fNode,'x'); d2Node=mjs.derivative(d1Node,'x');
+      d1str=d1Node.toString(); d2str=d2Node.toString();
+    }catch{}
+
+    const safeEval=(node,x)=>{try{const v=node.evaluate({x});return(typeof v==='number'&&isFinite(v))?v:NaN;}catch{return NaN;}};
+    const fc=mjs.compile(expr);
+    const f=x=>{try{const v=fc.evaluate({x});return(typeof v==='number'&&isFinite(v))?v:NaN;}catch{return NaN;}};
+    const h=1e-5;
+    const df=x=>d1Node?safeEval(d1Node,x):(f(x+h)-f(x-h))/(2*h);
+    const ddf=x=>d2Node?safeEval(d2Node,x):(f(x+h)-2*f(x)+f(x-h))/(h*h);
+
+    const RANGE=10,N=800;
+    const xs=Array.from({length:N},(_,i)=>-RANGE+i*(2*RANGE/(N-1)));
+    const validXs=xs.filter(x=>isFinite(f(x)));
+    if(!validXs.length)throw new Error('לא ניתן לחשב בתחום זה');
+
+    // vertical asymptotes
+    const vAsympt=[];
+    for(let i=0;i<xs.length-1;i++){
+      const y1=f(xs[i]),y2=f(xs[i+1]);
+      if(isNaN(y1)!==isNaN(y2)){const xv=(xs[i]+xs[i+1])/2;if(!vAsympt.some(v=>Math.abs(v-xv)<.3))vAsympt.push(parseFloat(xv.toFixed(3)));}
+    }
+    // horizontal asymptotes
+    const hAsympt=[];
+    const yp=f(1e6),yn=f(-1e6);
+    if(isFinite(yp))hAsympt.push({dir:'+∞',val:parseFloat(yp.toFixed(4))});
+    if(isFinite(yn))hAsympt.push({dir:'-∞',val:parseFloat(yn.toFixed(4))});
+
+    // x-intercepts
+    const xInter=[];
+    for(let i=0;i<validXs.length-1;i++){
+      const y1=f(validXs[i]),y2=f(validXs[i+1]);
+      if(y1*y2<0){let lo=validXs[i],hi=validXs[i+1];for(let k=0;k<50;k++){const m=(lo+hi)/2;f(lo)*f(m)<=0?hi=m:lo=m;}
+        const r=parseFloat(((lo+hi)/2).toFixed(4));if(!xInter.some(v=>Math.abs(v-r)<.01))xInter.push(r);}
+    }
+    let yInt=null;try{const v=f(0);if(isFinite(v))yInt=parseFloat(v.toFixed(4));}catch{}
+
+    // critical points
+    const critPts=[];
+    for(let i=0;i<validXs.length-1;i++){
+      const d1=df(validXs[i]),d2=df(validXs[i+1]);
+      if(isFinite(d1)&&isFinite(d2)&&d1*d2<0){
+        let lo=validXs[i],hi=validXs[i+1];for(let k=0;k<50;k++){const m=(lo+hi)/2;df(lo)*df(m)<=0?hi=m:lo=m;}
+        const cx=parseFloat(((lo+hi)/2).toFixed(4));
+        if(!critPts.some(p=>Math.abs(p.x-cx)<.01)){
+          const cy=parseFloat(f(cx).toFixed(4)),dd=ddf(cx);
+          const type=dd>.01?'מינימום':dd<-.01?'מקסימום':'קיצון';
+          critPts.push({x:cx,y:cy,type});
+        }
+      }
+    }
+    // inflection points
+    const inflPts=[];
+    for(let i=0;i<validXs.length-1;i++){
+      const dd1=ddf(validXs[i]),dd2=ddf(validXs[i+1]);
+      if(isFinite(dd1)&&isFinite(dd2)&&dd1*dd2<0){
+        let lo=validXs[i],hi=validXs[i+1];for(let k=0;k<50;k++){const m=(lo+hi)/2;ddf(lo)*ddf(m)<=0?hi=m:lo=m;}
+        const ix=parseFloat(((lo+hi)/2).toFixed(4));
+        if(!inflPts.some(p=>Math.abs(p.x-ix)<.01)){try{inflPts.push({x:ix,y:parseFloat(f(ix).toFixed(4))});}catch{}}
+      }
+    }
+    // monotone intervals
+    const bnd1=[-RANGE,...critPts.map(p=>p.x),...vAsympt,RANGE].sort((a,b)=>a-b);
+    const inc=[],dec=[];
+    for(let i=0;i<bnd1.length-1;i++){const mid=(bnd1[i]+bnd1[i+1])/2,d=df(mid);if(!isFinite(d))continue;d>.001?inc.push([bnd1[i],bnd1[i+1]]):d<-.001?dec.push([bnd1[i],bnd1[i+1]]):0;}
+    // concavity
+    const bnd2=[-RANGE,...inflPts.map(p=>p.x),...vAsympt,RANGE].sort((a,b)=>a-b);
+    const cup=[],cdn=[];
+    for(let i=0;i<bnd2.length-1;i++){const mid=(bnd2[i]+bnd2[i+1])/2,dd=ddf(mid);if(!isFinite(dd))continue;dd>.001?cup.push([bnd2[i],bnd2[i+1]]):dd<-.001?cdn.push([bnd2[i],bnd2[i+1]]):0;}
+
+    const card=(cls,icon,title,body)=>
+      `<div class="fr-card ${cls}">
+        <div class="fr-card-header"><span>${icon}</span><span>${title}</span></div>
+        <div class="fr-card-body">${body}</div>
+      </div>`;
+    const row=(lbl,val,cls='val')=>`<div style="margin-bottom:6px"><span class="lbl">${lbl}</span><div class="${cls}">${val}</div></div>`;
+    const none=`<span class="none">לא נמצאו בתחום</span>`;
+    const ivals=(arr)=>arr.length?arr.map(([a,b])=>`(${isFinite(a)?fmt(a):'-∞'}, ${isFinite(b)?fmt(b):'+∞'})`).join(' ∪ '):`<span class="none">אין</span>`;
+
+    const domBody = !vAsympt.length
+      ? `<div class="val">(-∞, +∞) — כל הממשיים</div>`
+      : `<div>כל הממשיים <span class="warn">למעט x = ${vAsympt.join(' , ')}</span></div>`;
+
+    let asymptBody = '';
+    if(vAsympt.length) asymptBody+=row('אנכיות',`x = ${vAsympt.join(' , ')}`,'warn');
+    if(hAsympt.length) hAsympt.forEach(h=>asymptBody+=row(`אופקית (x→${h.dir})`,`y = ${h.val}`));
+    if(!asymptBody) asymptBody=none;
+
+    const interBody=
+      row('ציר x', xInter.length?`x = ${xInter.join(' , ')}`:none) +
+      row('ציר y', yInt!==null?`y = ${yInt}`:none);
+
+    let critBody=row("f'(x) =",`<span class="expr">${d1str}</span>`,'');
+    if(critPts.length){
+      critBody+=`<div class="lbl" style="margin-top:6px">f'(x) = 0 — נקודות קיצון</div>`;
+      critPts.forEach(p=>critBody+=`<div style="padding:3px 0"><span class="val">x = ${p.x}</span>&nbsp;&nbsp;f(x) = <span class="val">${p.y}</span>&nbsp;&nbsp;<span style="color:#fde68a;font-size:.8rem">[${p.type}]</span></div>`);
+    } else critBody+=`<div class="lbl" style="margin-top:4px">f'(x) = 0 — ${none}</div>`;
+    critBody+=`<div style="margin-top:8px">${row('עולה (f\'>0)',ivals(inc),'')}</div>`;
+    critBody+=row("יורדת (f'<0)",ivals(dec),'');
+
+    let inflBody=row("f''(x) =",`<span class="expr">${d2str}</span>`,'');
+    if(inflPts.length){
+      inflBody+=`<div class="lbl" style="margin-top:6px">f''(x) = 0 — נקודות פיתול</div>`;
+      inflPts.forEach(p=>inflBody+=`<div style="padding:3px 0"><span class="val">x = ${p.x}</span>&nbsp;&nbsp;f(x) = <span class="val">${p.y}</span></div>`);
+    } else inflBody+=`<div class="lbl" style="margin-top:4px">f''(x) = 0 — ${none}</div>`;
+    inflBody+=`<div style="margin-top:8px">${row("קעורה (f''>0)",ivals(cup),'')}</div>`;
+    inflBody+=row("קמורה (f''<0)",ivals(cdn),'');
+
+    resEl.innerHTML=
+      card('fr-domain','📍','תחום הגדרה',domBody)+
+      card('fr-asympt','↗','אסימפטוטות',asymptBody)+
+      card('fr-inter','✕','חיתוכים',interBody)+
+      card('fr-d1','∂','נגזרת ראשונה',critBody)+
+      card('fr-d2','∂²','נגזרת שנייה',inflBody);
+    resEl.classList.add('show');
+
+    // Graph
+    const gx=[],gy=[];
+    for(let i=0;i<validXs.length;i++){
+      if(i>0&&Math.abs(f(validXs[i])-f(validXs[i-1]))>60){gx.push(null);gy.push(null);}
+      gx.push(validXs[i]);gy.push(f(validXs[i]));
+    }
+    const traces=[{x:gx,y:gy,mode:'lines',name:'f(x)',line:{color:'#00d4d4',width:2.5},connectgaps:false}];
+    if(critPts.length)traces.push({x:critPts.map(p=>p.x),y:critPts.map(p=>p.y),mode:'markers+text',name:'קיצון',marker:{color:'#a6e3a1',size:10,symbol:'circle'},text:critPts.map(p=>p.type),textposition:'top center',textfont:{color:'#a6e3a1',size:10}});
+    if(inflPts.length)traces.push({x:inflPts.map(p=>p.x),y:inflPts.map(p=>p.y),mode:'markers',name:'פיתול',marker:{color:'#fab387',size:9,symbol:'diamond'}});
+    if(xInter.length)traces.push({x:xInter,y:xInter.map(()=>0),mode:'markers',name:'חיתוך x',marker:{color:'#89b4fa',size:9,symbol:'x'}});
+    vAsympt.forEach(xv=>traces.push({x:[xv,xv],y:[-50,50],mode:'lines',name:`x=${xv}`,line:{color:'rgba(248,113,133,.4)',dash:'dash',width:1.5},showlegend:false}));
+    window.Plotly.newPlot(plotEl,traces,{
+      paper_bgcolor:'#050a15',plot_bgcolor:'#050a15',
+      font:{color:'#e0e0ff',size:11},
+      xaxis:{gridcolor:'#141f35',zerolinecolor:'#243050',color:'#7090b0'},
+      yaxis:{gridcolor:'#141f35',zerolinecolor:'#243050',color:'#7090b0'},
+      margin:{l:45,r:16,t:28,b:38},
+      height: 300,
+      legend:{bgcolor:'rgba(0,0,0,0)',font:{color:'#c0d0ff',size:10}},
+    },{responsive:true,displayModeBar:false});
+    plotEl.classList.add('show');
+    setTimeout(() => window.Plotly.Plots.resize(plotEl), 50);
+  }catch(err){resEl.innerHTML=`<span style="color:#f38ba8">שגיאה: ${err.message}</span>`;resEl.classList.add('show');}
+}
+
+// ══ Keyboard input ══════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (document.querySelector('.panel.open')) return;
+  const k = e.key;
+  if (k >= '0' && k <= '9') { inputDigit(k); return; }
+  if (k === '.')  { inputDot(); return; }
+  if (k === '+')  { inputOp('+'); return; }
+  if (k === '-')  { inputOp('-'); return; }
+  if (k === '*')  { inputOp('*'); return; }
+  if (k === '/')  { e.preventDefault(); inputOp('/'); return; }
+  if (k === '%')  { inputOp('%'); return; }
+  if (k === 'Enter' || k === '=') { calculate(); return; }
+  if (k === 'Backspace') { delChar(); return; }
+  if (k === 'Escape' || k === 'Delete' || k === 'c' || k === 'C' || k === 'ב') { clearAll(); return; }
+});
+
+// ══ Service Worker ═══════════════════════════════════════
+if('serviceWorker' in navigator)
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body>
+</html>

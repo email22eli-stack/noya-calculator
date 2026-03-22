@@ -1,0 +1,20 @@
+{
+  "name": "מחשבון נויה — בגרות 5 יחידות",
+  "short_name": "נויה",
+  "description": "מחשבון חכם לבגרות מתמטיקה 5 יחידות",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0d0d1a",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait",
+  "lang": "he",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "Noya.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

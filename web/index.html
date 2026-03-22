@@ -370,34 +370,77 @@ html, body {
 .formula-text { font-family:'Courier New',monospace; font-size:clamp(.8rem,2.3vw,.95rem); color:#c0d0ff; direction:ltr; text-align:left; }
 
 /* quadratic */
-.quad-body { flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:14px; }
-.quad-eq-title { text-align:center; font-family:'Orbitron',monospace; color:rgba(200,200,255,.45); font-size:.93rem; letter-spacing:1px; }
-.input-row { display:flex; gap:12px; align-items:center; }
-.coef-label { color:#a855f7; font-weight:700; font-size:1rem; white-space:nowrap; width:40px; font-family:'Orbitron',monospace; }
-.coef-input {
-  flex:1; background:rgba(25,20,65,.6); border:1px solid rgba(124,58,237,.32);
-  color:#e0e0ff; border-radius:10px; padding:11px 14px; font-size:1.05rem;
-  outline:none; text-align:center; font-family:'Orbitron',monospace;
-  transition:border-color .2s,box-shadow .2s;
+/* ── Quadratic panel ── */
+.quad-body { flex:1; overflow-y:auto; padding:16px 18px; display:flex; flex-direction:column; gap:12px; }
+
+.quad-eq-banner {
+  background: linear-gradient(135deg, rgba(168,85,247,.15), rgba(124,58,237,.08));
+  border: 1px solid rgba(168,85,247,.25);
+  border-radius: 14px; padding: 14px;
+  text-align: center;
 }
-.coef-input:focus { border-color:#7c3aed; box-shadow:0 0 0 2px rgba(124,58,237,.18); }
+.quad-eq-banner .eq-main {
+  font-family:'Orbitron',monospace; font-size:clamp(1rem,3.5vw,1.2rem);
+  background: linear-gradient(135deg,#c084fc,#818cf8);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  letter-spacing:1px;
+}
+.quad-eq-banner .eq-hint {
+  font-size:.72rem; color:rgba(200,200,255,.35); margin-top:4px; letter-spacing:.5px;
+}
+
+.coef-row {
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;
+}
+.coef-block {
+  background:rgba(25,20,65,.6); border:1px solid rgba(124,58,237,.28);
+  border-radius:12px; padding:10px 8px;
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  transition:border-color .2s, box-shadow .2s;
+}
+.coef-block:focus-within {
+  border-color:#a855f7; box-shadow:0 0 0 2px rgba(168,85,247,.18);
+}
+.coef-block label {
+  font-family:'Orbitron',monospace; font-size:.72rem;
+  color:#a855f7; letter-spacing:1px; font-weight:700;
+}
+.coef-input {
+  width:100%; background:transparent; border:none;
+  color:#e0e0ff; font-size:1.1rem; font-weight:700;
+  outline:none; text-align:center; font-family:'Orbitron',monospace;
+}
+
 .solve-btn {
   background:linear-gradient(135deg,#d97706,#b45309); color:#fff;
-  border:none; border-radius:12px; padding:14px; font-size:1.02rem;
-  font-weight:700; cursor:pointer; width:100%; letter-spacing:1px;
-  box-shadow:0 4px 16px rgba(217,119,6,.3); transition:transform .1s;
+  border:none; border-radius:12px; padding:13px; font-size:1rem;
+  font-weight:700; cursor:pointer; width:100%; letter-spacing:1.5px;
+  box-shadow:0 4px 16px rgba(217,119,6,.3); transition:transform .1s, box-shadow .1s;
+  position:relative; overflow:hidden;
 }
-.solve-btn:active { transform:scale(.97); }
+.solve-btn:active { transform:scale(.97); box-shadow:0 0 24px rgba(217,119,6,.6); }
+
 .quad-result {
-  background:rgba(20,15,50,.6); border:1px solid rgba(0,212,212,.22);
-  border-radius:14px; padding:16px;
-  font-family:'Courier New',monospace; font-size:clamp(.87rem,2.5vw,1rem);
-  line-height:1.9; white-space:pre-wrap; backdrop-filter:blur(6px); display:none;
+  border-radius:14px; backdrop-filter:blur(6px); display:none; overflow:hidden;
 }
 .quad-result.show { display:block; }
-.res-green{color:#a6e3a1}.res-blue{color:#89b4fa}.res-orange{color:#fab387}.res-red{color:#f38ba8}
 
-/* function */
+.disc-badge {
+  padding:10px 16px;
+  display:flex; align-items:center; gap:10px;
+  font-family:'Orbitron',monospace; font-size:.82rem;
+}
+.disc-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0; }
+.quad-solution {
+  background:rgba(12,9,36,.7); padding:14px 16px;
+  font-family:'Courier New',monospace;
+  font-size:clamp(.88rem,2.5vw,1rem); line-height:2;
+}
+.q-label { color:#89b4fa; font-size:.75rem; text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:2px; }
+.q-val   { color:#a6e3a1; font-size:1.05rem; font-weight:700; font-family:'Orbitron',monospace; }
+.q-complex { color:#f38ba8; }
+
+/* ── Function panel ── */
 .func-body { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:12px; }
 .func-input-row { display:flex; gap:8px; align-items:center; }
 .func-label { color:#89b4fa; font-weight:700; font-size:1rem; white-space:nowrap; font-family:'Orbitron',monospace; }
@@ -418,15 +461,45 @@ html, body {
 .spinner { display:none; text-align:center; padding:24px; color:#7c3aed; font-size:2rem; animation:spin .8s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg)} }
 .spinner.show { display:block; }
-.func-result {
-  background:rgba(12,9,36,.75); border:1px solid rgba(137,180,250,.18);
-  border-radius:14px; padding:14px 16px;
-  font-family:'Courier New',monospace; font-size:clamp(.74rem,1.9vw,.88rem);
-  line-height:1.95; white-space:pre-wrap; direction:ltr; text-align:left;
-  display:none; overflow-x:auto; backdrop-filter:blur(6px);
-  color: #c8d8ff;
+.func-result { display:none; }
+.func-result.show { display:flex; flex-direction:column; gap:8px; }
+
+.fr-card {
+  border-radius:12px; overflow:hidden;
+  border: 1px solid rgba(255,255,255,.07);
+  backdrop-filter:blur(8px);
 }
-.func-result.show { display:block; }
+.fr-card-header {
+  padding:8px 14px;
+  font-size:.7rem; font-weight:700; letter-spacing:1.5px;
+  text-transform:uppercase; display:flex; align-items:center; gap:8px;
+}
+.fr-card-body {
+  background:rgba(8,6,22,.65);
+  padding:10px 14px;
+  font-family:'Courier New',monospace;
+  font-size:clamp(.76rem,2vw,.88rem);
+  line-height:1.9; direction:ltr; text-align:left;
+  color:#c8d8ff;
+}
+.fr-card-body .lbl { color:rgba(200,200,255,.45); font-size:.75rem; }
+.fr-card-body .val { color:#a6e3a1; font-weight:600; }
+.fr-card-body .sym { color:#cba6f7; }
+.fr-card-body .expr { color:#89b4fa; font-style:italic; word-break:break-all; }
+.fr-card-body .warn { color:#fab387; }
+.fr-card-body .none { color:rgba(200,200,255,.35); font-style:italic; }
+
+/* card accent colors */
+.fr-domain  { background:linear-gradient(135deg,rgba(139,92,246,.25),rgba(109,40,217,.12)); }
+.fr-domain .fr-card-header { background:rgba(139,92,246,.2); color:#c084fc; }
+.fr-asympt  { background:linear-gradient(135deg,rgba(248,113,133,.18),rgba(220,38,38,.08)); }
+.fr-asympt .fr-card-header { background:rgba(248,113,133,.15); color:#fca5a5; }
+.fr-inter   { background:linear-gradient(135deg,rgba(96,165,250,.18),rgba(37,99,235,.08)); }
+.fr-inter .fr-card-header { background:rgba(96,165,250,.15); color:#93c5fd; }
+.fr-d1      { background:linear-gradient(135deg,rgba(52,211,153,.18),rgba(16,185,129,.08)); }
+.fr-d1 .fr-card-header { background:rgba(52,211,153,.15); color:#6ee7b7; }
+.fr-d2      { background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(217,119,6,.08)); }
+.fr-d2 .fr-card-header { background:rgba(251,191,36,.15); color:#fde68a; }
 #plotDiv {
   border-radius:14px; overflow:hidden;
   border:1px solid rgba(137,180,250,.14);
@@ -532,11 +605,16 @@ html, body {
     <button class="btn-close" onclick="closePanel('quadPanel')">✕</button>
   </div>
   <div class="quad-body">
-    <div class="quad-eq-title">ax² + bx + c = 0</div>
-    <div class="input-row"><span class="coef-label">a =</span><input class="coef-input" id="qa" type="number" value="1"></div>
-    <div class="input-row"><span class="coef-label">b =</span><input class="coef-input" id="qb" type="number" value="0"></div>
-    <div class="input-row"><span class="coef-label">c =</span><input class="coef-input" id="qc" type="number" value="0"></div>
-    <button class="solve-btn" onclick="solveQuad()">⟹  פתור</button>
+    <div class="quad-eq-banner">
+      <div class="eq-main">ax² + bx + c = 0</div>
+      <div class="eq-hint">הזן את המקדמים ולחץ פתור</div>
+    </div>
+    <div class="coef-row">
+      <div class="coef-block"><label>a</label><input class="coef-input" id="qa" type="number" value="1"></div>
+      <div class="coef-block"><label>b</label><input class="coef-input" id="qb" type="number" value="0"></div>
+      <div class="coef-block"><label>c</label><input class="coef-input" id="qc" type="number" value="0"></div>
+    </div>
+    <button class="solve-btn" onclick="solveQuad()">פתור</button>
     <div class="quad-result" id="quadResult"></div>
   </div>
 </div>
@@ -790,23 +868,59 @@ function solveQuad(){
   const a=+document.getElementById('qa').value;
   const b=+document.getElementById('qb').value;
   const c=+document.getElementById('qc').value;
-  if(isNaN(a)||isNaN(b)||isNaN(c))return showQR('<span class="res-red">הזן מספרים תקינים</span>');
-  if(!a)return showQR('<span class="res-red">a לא יכול להיות 0</span>');
+  const el=document.getElementById('quadResult');
+  if(isNaN(a)||isNaN(b)||isNaN(c)||!a){
+    el.innerHTML=`<div class="quad-solution" style="color:#f38ba8;text-align:center;padding:20px">
+      ${!a?'המקדם a לא יכול להיות 0':'הזן מספרים תקינים'}</div>`;
+    el.classList.add('show'); return;
+  }
   const disc=b*b-4*a*c;
   const sign=v=>v>=0?'+':'';
   const eq=`${a}x² ${sign(b)}${b}x ${sign(c)}${c} = 0`;
-  let html=`<span class="res-blue">המשוואה: </span>${eq}\n<span class="res-blue">Δ = b²-4ac = </span>${fmt(disc)}\n\n`;
+
+  let badgeColor, badgeBg, badgeDot, badgeText, solutionHTML;
   if(disc>0){
-    html+=`<span class="res-green">✓  שני פתרונות ממשיים:</span>\n  x₁ = ${fmt((-b+Math.sqrt(disc))/(2*a))}\n  x₂ = ${fmt((-b-Math.sqrt(disc))/(2*a))}`;
-  }else if(disc===0){
-    html+=`<span class="res-orange">◈  פתרון ממשי אחד (כפול):</span>\n  x = ${fmt(-b/(2*a))}`;
-  }else{
+    badgeColor='#6ee7b7'; badgeBg='rgba(52,211,153,.12)'; badgeDot='#a6e3a1';
+    badgeText='Δ > 0 — שני פתרונות ממשיים';
+    const x1=(-b+Math.sqrt(disc))/(2*a), x2=(-b-Math.sqrt(disc))/(2*a);
+    solutionHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+        <div><span class="lbl">x₁</span><div class="val">${fmt(x1)}</div></div>
+        <div><span class="lbl">x₂</span><div class="val">${fmt(x2)}</div></div>
+      </div>`;
+  } else if(disc===0){
+    badgeColor='#fde68a'; badgeBg='rgba(251,191,36,.12)'; badgeDot='#fab387';
+    badgeText='Δ = 0 — פתרון יחיד (כפול)';
+    solutionHTML=`<div style="margin-top:4px"><span class="lbl">x</span><div class="val">${fmt(-b/(2*a))}</div></div>`;
+  } else {
+    badgeColor='#fca5a5'; badgeBg='rgba(248,113,133,.12)'; badgeDot='#f38ba8';
+    badgeText='Δ < 0 — פתרונות מרוכבים';
     const re=-b/(2*a),im=Math.sqrt(-disc)/(2*a);
-    html+=`<span class="res-red">✗  פתרונות מרוכבים (Δ < 0):</span>\n  x₁ = ${fmt(re)} + ${fmt(im)}i\n  x₂ = ${fmt(re)} − ${fmt(im)}i`;
+    solutionHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+        <div><span class="lbl">x₁</span><div class="val q-complex">${fmt(re)} + ${fmt(im)}i</div></div>
+        <div><span class="lbl">x₂</span><div class="val q-complex">${fmt(re)} − ${fmt(im)}i</div></div>
+      </div>`;
   }
-  showQR(html);
+
+  el.innerHTML=`
+    <div class="disc-badge" style="background:${badgeBg};border-bottom:1px solid rgba(255,255,255,.06);color:${badgeColor}">
+      <div class="disc-dot" style="background:${badgeDot}"></div>
+      <span style="font-family:'Orbitron',monospace;font-size:.75rem;letter-spacing:.5px">${badgeText}</span>
+    </div>
+    <div class="quad-solution">
+      <div style="margin-bottom:10px">
+        <span class="lbl">המשוואה</span>
+        <span style="color:#c0d0ff;font-family:'Courier New',monospace">${eq}</span>
+      </div>
+      <div style="margin-bottom:10px">
+        <span class="lbl">דיסקרימיננטה</span>
+        <span style="color:${badgeColor};font-family:'Orbitron',monospace;font-weight:700">Δ = ${fmt(disc)}</span>
+      </div>
+      ${solutionHTML}
+    </div>`;
+  el.classList.add('show');
 }
-function showQR(html){const el=document.getElementById('quadResult');el.innerHTML=html;el.classList.add('show');}
 
 // ══ Function Analysis ════════════════════════════════════
 let mjsReady=false,mjsProm=null,plyReady=false,plyProm=null;
@@ -922,29 +1036,51 @@ async function analyzeFunc(){
     const cup=[],cdn=[];
     for(let i=0;i<bnd2.length-1;i++){const mid=(bnd2[i]+bnd2[i+1])/2,dd=ddf(mid);if(!isFinite(dd))continue;dd>.001?cup.push([bnd2[i],bnd2[i+1]]):dd<-.001?cdn.push([bnd2[i],bnd2[i+1]]):0;}
 
-    const HR='─'.repeat(42);
-    let R=`f(x) = ${expr}\n${HR}\n\n`;
-    R+=`[תחום הגדרה]\n  ${!vAsympt.length?'כל הממשיים  (-∞, +∞)':'למעט: x = '+vAsympt.join(' , ')}\n\n`;
-    R+=`[אסימפטוטות]\n`;
-    if(vAsympt.length)R+=`  אנכיות:  x = ${vAsympt.join(' , ')}\n`;
-    if(hAsympt.length)hAsympt.forEach(h=>R+=`  אופקית:  y = ${h.val}  (x→${h.dir})\n`);
-    if(!vAsympt.length&&!hAsympt.length)R+=`  אין אסימפטוטות\n`;
-    R+=`\n[חיתוכים]\n  ציר x:  ${xInter.length?'x = '+xInter.join(' , '):'לא נמצאו'}\n`;
-    R+=`  ציר y:  ${yInt!==null?'y = '+yInt:'לא מוגדרת ב‑x=0'}\n`;
-    R+=`\n${HR}\n[נגזרת ראשונה]\n  f'(x) = ${d1str}\n\n`;
-    R+=`  f'(x) = 0  (נקודות קיצון):\n`;
-    if(critPts.length)critPts.forEach(p=>R+=`    x=${p.x}  →  f(x)=${p.y}  [${p.type}]\n`);
-    else R+=`    לא נמצאו\n`;
-    R+=`\n  עולה  (f'>0):   ${fmtIntervals(inc)}\n`;
-    R+=`  יורדת (f'<0):  ${fmtIntervals(dec)}\n`;
-    R+=`\n${HR}\n[נגזרת שנייה]\n  f''(x) = ${d2str}\n\n`;
-    R+=`  f''(x) = 0  (נקודות פיתול):\n`;
-    if(inflPts.length)inflPts.forEach(p=>R+=`    x=${p.x}  →  f(x)=${p.y}\n`);
-    else R+=`    לא נמצאו\n`;
-    R+=`\n  קעורה  (f''>0):  ${fmtIntervals(cup)}\n`;
-    R+=`  קמורה (f''<0):  ${fmtIntervals(cdn)}\n`;
+    const card=(cls,icon,title,body)=>
+      `<div class="fr-card ${cls}">
+        <div class="fr-card-header"><span>${icon}</span><span>${title}</span></div>
+        <div class="fr-card-body">${body}</div>
+      </div>`;
+    const row=(lbl,val,cls='val')=>`<div style="margin-bottom:6px"><span class="lbl">${lbl}</span><div class="${cls}">${val}</div></div>`;
+    const none=`<span class="none">לא נמצאו בתחום</span>`;
+    const ivals=(arr)=>arr.length?arr.map(([a,b])=>`(${isFinite(a)?fmt(a):'-∞'}, ${isFinite(b)?fmt(b):'+∞'})`).join(' ∪ '):`<span class="none">אין</span>`;
 
-    resEl.textContent=R; resEl.classList.add('show');
+    const domBody = !vAsympt.length
+      ? `<div class="val">(-∞, +∞) — כל הממשיים</div>`
+      : `<div>כל הממשיים <span class="warn">למעט x = ${vAsympt.join(' , ')}</span></div>`;
+
+    let asymptBody = '';
+    if(vAsympt.length) asymptBody+=row('אנכיות',`x = ${vAsympt.join(' , ')}`,'warn');
+    if(hAsympt.length) hAsympt.forEach(h=>asymptBody+=row(`אופקית (x→${h.dir})`,`y = ${h.val}`));
+    if(!asymptBody) asymptBody=none;
+
+    const interBody=
+      row('ציר x', xInter.length?`x = ${xInter.join(' , ')}`:none) +
+      row('ציר y', yInt!==null?`y = ${yInt}`:none);
+
+    let critBody=row("f'(x) =",`<span class="expr">${d1str}</span>`,'');
+    if(critPts.length){
+      critBody+=`<div class="lbl" style="margin-top:6px">f'(x) = 0 — נקודות קיצון</div>`;
+      critPts.forEach(p=>critBody+=`<div style="padding:3px 0"><span class="val">x = ${p.x}</span>&nbsp;&nbsp;f(x) = <span class="val">${p.y}</span>&nbsp;&nbsp;<span style="color:#fde68a;font-size:.8rem">[${p.type}]</span></div>`);
+    } else critBody+=`<div class="lbl" style="margin-top:4px">f'(x) = 0 — ${none}</div>`;
+    critBody+=`<div style="margin-top:8px">${row('עולה (f\'>0)',ivals(inc),'')}</div>`;
+    critBody+=row("יורדת (f'<0)",ivals(dec),'');
+
+    let inflBody=row("f''(x) =",`<span class="expr">${d2str}</span>`,'');
+    if(inflPts.length){
+      inflBody+=`<div class="lbl" style="margin-top:6px">f''(x) = 0 — נקודות פיתול</div>`;
+      inflPts.forEach(p=>inflBody+=`<div style="padding:3px 0"><span class="val">x = ${p.x}</span>&nbsp;&nbsp;f(x) = <span class="val">${p.y}</span></div>`);
+    } else inflBody+=`<div class="lbl" style="margin-top:4px">f''(x) = 0 — ${none}</div>`;
+    inflBody+=`<div style="margin-top:8px">${row("קעורה (f''>0)",ivals(cup),'')}</div>`;
+    inflBody+=row("קמורה (f''<0)",ivals(cdn),'');
+
+    resEl.innerHTML=
+      card('fr-domain','📍','תחום הגדרה',domBody)+
+      card('fr-asympt','↗','אסימפטוטות',asymptBody)+
+      card('fr-inter','✕','חיתוכים',interBody)+
+      card('fr-d1','∂','נגזרת ראשונה',critBody)+
+      card('fr-d2','∂²','נגזרת שנייה',inflBody);
+    resEl.classList.add('show');
 
     // Graph
     const gx=[],gy=[];
@@ -968,6 +1104,22 @@ async function analyzeFunc(){
     plotEl.classList.add('show');
   }catch(err){resEl.innerHTML=`<span style="color:#f38ba8">שגיאה: ${err.message}</span>`;resEl.classList.add('show');}
 }
+
+// ══ Keyboard input ══════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (document.querySelector('.panel.open')) return;
+  const k = e.key;
+  if (k >= '0' && k <= '9') { inputDigit(k); return; }
+  if (k === '.')  { inputDot(); return; }
+  if (k === '+')  { inputOp('+'); return; }
+  if (k === '-')  { inputOp('-'); return; }
+  if (k === '*')  { inputOp('*'); return; }
+  if (k === '/')  { e.preventDefault(); inputOp('/'); return; }
+  if (k === '%')  { inputOp('%'); return; }
+  if (k === 'Enter' || k === '=') { calculate(); return; }
+  if (k === 'Backspace') { delChar(); return; }
+  if (k === 'Escape' || k === 'Delete') { clearAll(); return; }
+});
 
 // ══ Service Worker ═══════════════════════════════════════
 if('serviceWorker' in navigator)

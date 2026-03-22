@@ -20,7 +20,6 @@ html, body {
   display: flex; align-items: center; justify-content: center;
   font-family: 'Segoe UI', Arial, sans-serif;
   touch-action: manipulation; user-select: none;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 /* ══ Starfield ══════════════════════════════════════════ */
@@ -66,6 +65,8 @@ html, body {
   position: fixed; inset: 0; z-index: 1000;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   cursor: pointer; transition: opacity .7s ease;
+  will-change: opacity;
+  transform: translateZ(0);
 }
 #splash.hide { opacity: 0; pointer-events: none; }
 
@@ -92,16 +93,13 @@ html, body {
   border-radius: 50%;
   position: relative; z-index: 2;
   border: 3px solid rgba(0,212,212,.5);
-  box-shadow:
-    0 0 0 8px  rgba(124,58,237,.18),
-    0 0 50px   rgba(124,58,237,.8),
-    0 0 100px  rgba(0,212,212,.35),
-    0 0 160px  rgba(168,85,247,.2);
+  will-change: transform, filter;
+  transform: translateZ(0);
   animation: imgGlow 3s ease-in-out infinite;
 }
 @keyframes imgGlow {
-  0%,100%{ box-shadow:0 0 0 8px rgba(124,58,237,.18),0 0 50px rgba(124,58,237,.8),0 0 100px rgba(0,212,212,.35); }
-  50%    { box-shadow:0 0 0 14px rgba(124,58,237,.28),0 0 80px rgba(124,58,237,1),0 0 150px rgba(0,212,212,.55); }
+  0%,100%{ filter: drop-shadow(0 0 18px rgba(124,58,237,.9)) drop-shadow(0 0 40px rgba(0,212,212,.4)); }
+  50%    { filter: drop-shadow(0 0 28px rgba(124,58,237,1))  drop-shadow(0 0 60px rgba(0,212,212,.65)); }
 }
 #splash h1 {
   font-family:'Orbitron',monospace; font-weight:900;
@@ -126,7 +124,7 @@ html, body {
 #cardWrap {
   position: relative; z-index: 10;
   width: min(430px, 97vw);
-  height: min(800px, calc(var(--real-vh, 1vh) * 97));
+  height: min(800px, calc(var(--real-vh, 1vh) * 93));
   border-radius: 28px;
   padding: 1.5px;
   background: linear-gradient(135deg, #00d4d4, #7c3aed 40%, #a855f7 70%, #00d4d4);

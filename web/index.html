@@ -297,9 +297,10 @@ html, body {
 
 /* ══ Panels ═════════════════════════════════════════════ */
 .panel {
-  position: fixed; inset: 0; z-index: 800;
-  background: rgba(4,3,15,.97);
+  position: absolute; inset: 0; z-index: 200;
+  background: rgba(6,4,18,.97);
   backdrop-filter: blur(28px);
+  border-radius: 27px;
   display: none; flex-direction: column; overflow: hidden;
 }
 .panel.open { display: flex; }
@@ -582,61 +583,61 @@ html, body {
       <button class="btn btn-eq"  onclick="calculate()">=</button>
     </div>
 
-  </div>
-</div>
-
-<!-- Formula Panel -->
-<div class="panel" id="formulaPanel">
-  <div class="panel-header">
-    <span class="panel-title">📐 דף נוסחאות — בגרות 5 יח'</span>
-    <button class="btn-close" onclick="closePanel('formulaPanel')">✕</button>
-  </div>
-  <div class="formula-tabs" id="formulaTabs"></div>
-  <div class="search-wrap">
-    <input class="search-input" id="formulaSearch" placeholder="🔍  חיפוש נוסחה..." oninput="filterFormulas()">
-  </div>
-  <div class="formula-list" id="formulaList"></div>
-</div>
-
-<!-- Quadratic Panel -->
-<div class="panel" id="quadPanel">
-  <div class="panel-header">
-    <span class="panel-title">✏️ משוואה ריבועית</span>
-    <button class="btn-close" onclick="closePanel('quadPanel')">✕</button>
-  </div>
-  <div class="quad-body">
-    <div class="quad-eq-banner">
-      <div class="eq-main">ax² + bx + c = 0</div>
-      <div class="eq-hint">הזן את המקדמים ולחץ פתור</div>
+  <!-- Formula Panel -->
+  <div class="panel" id="formulaPanel">
+    <div class="panel-header">
+      <span class="panel-title">📐 דף נוסחאות — בגרות 5 יח'</span>
+      <button class="btn-close" onclick="closePanel('formulaPanel')">✕</button>
     </div>
-    <div class="coef-row">
-      <div class="coef-block"><label>a</label><input class="coef-input" id="qa" type="number" value="1"></div>
-      <div class="coef-block"><label>b</label><input class="coef-input" id="qb" type="number" value="0"></div>
-      <div class="coef-block"><label>c</label><input class="coef-input" id="qc" type="number" value="0"></div>
+    <div class="formula-tabs" id="formulaTabs"></div>
+    <div class="search-wrap">
+      <input class="search-input" id="formulaSearch" placeholder="🔍  חיפוש נוסחה..." oninput="filterFormulas()">
     </div>
-    <button class="solve-btn" onclick="solveQuad()">פתור</button>
-    <div class="quad-result" id="quadResult"></div>
+    <div class="formula-list" id="formulaList"></div>
   </div>
-</div>
 
-<!-- Function Panel -->
-<div class="panel" id="funcPanel">
-  <div class="panel-header">
-    <span class="panel-title">🔍 חקר פונקציה</span>
-    <button class="btn-close" onclick="closePanel('funcPanel')">✕</button>
-  </div>
-  <div class="func-body">
-    <div class="func-input-row">
-      <span class="func-label">f(x) =</span>
-      <input class="func-input" id="funcInput" placeholder="x^3 - 3*x + 2" value="x^3 - 3*x + 2">
-      <button class="analyze-btn" onclick="analyzeFunc()">חקור</button>
+  <!-- Quadratic Panel -->
+  <div class="panel" id="quadPanel">
+    <div class="panel-header">
+      <span class="panel-title">✏️ משוואה ריבועית</span>
+      <button class="btn-close" onclick="closePanel('quadPanel')">✕</button>
     </div>
-    <div class="func-examples">דוגמאות: x^3-3*x+2 | sin(x) | 1/(x-1) | exp(x) | log(x) | sqrt(x)</div>
-    <div class="spinner" id="funcSpinner">⟳</div>
-    <div class="func-result" id="funcResult"></div>
-    <div id="plotDiv"></div>
+    <div class="quad-body">
+      <div class="quad-eq-banner">
+        <div class="eq-main">ax² + bx + c = 0</div>
+        <div class="eq-hint">הזן את המקדמים ולחץ פתור</div>
+      </div>
+      <div class="coef-row">
+        <div class="coef-block"><label>a</label><input class="coef-input" id="qa" type="number" value="1"></div>
+        <div class="coef-block"><label>b</label><input class="coef-input" id="qb" type="number" value="0"></div>
+        <div class="coef-block"><label>c</label><input class="coef-input" id="qc" type="number" value="0"></div>
+      </div>
+      <button class="solve-btn" onclick="solveQuad()">פתור</button>
+      <div class="quad-result" id="quadResult"></div>
+    </div>
   </div>
-</div>
+
+  <!-- Function Panel -->
+  <div class="panel" id="funcPanel">
+    <div class="panel-header">
+      <span class="panel-title">🔍 חקר פונקציה</span>
+      <button class="btn-close" onclick="closePanel('funcPanel')">✕</button>
+    </div>
+    <div class="func-body">
+      <div class="func-input-row">
+        <span class="func-label">f(x) =</span>
+        <input class="func-input" id="funcInput" placeholder="x^3 - 3*x + 2" value="x^3 - 3*x + 2">
+        <button class="analyze-btn" onclick="analyzeFunc()">חקור</button>
+      </div>
+      <div class="func-examples">דוגמאות: x^3-3*x+2 | sin(x) | 1/(x-1) | exp(x) | log(x) | sqrt(x)</div>
+      <div class="spinner" id="funcSpinner">⟳</div>
+      <div class="func-result" id="funcResult"></div>
+      <div id="plotDiv"></div>
+    </div>
+  </div>
+
+  </div><!-- end #app -->
+</div><!-- end #cardWrap -->
 
 <div class="copy-toast" id="copyToast">הועתק! ✓</div>
 
@@ -1118,7 +1119,7 @@ document.addEventListener('keydown', e => {
   if (k === '%')  { inputOp('%'); return; }
   if (k === 'Enter' || k === '=') { calculate(); return; }
   if (k === 'Backspace') { delChar(); return; }
-  if (k === 'Escape' || k === 'Delete') { clearAll(); return; }
+  if (k === 'Escape' || k === 'Delete' || k === 'c' || k === 'C') { clearAll(); return; }
 });
 
 // ══ Service Worker ═══════════════════════════════════════

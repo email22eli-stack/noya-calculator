@@ -1,4 +1,4 @@
-const CACHE = 'noya-v1';
+const CACHE = 'noya-v2';
 const ASSETS = [
   '.',
   'index.html',

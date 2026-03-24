@@ -514,6 +514,48 @@ html, body {
 #plotDiv.show { display:block; }
 #plotDiv.show { display:block; }
 
+/* ══ Scientific mode ═══════════════════════════════════ */
+.display-topbar {
+  display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 6px;
+}
+#sciToggle {
+  background: rgba(124,58,237,.2); border: 1px solid rgba(124,58,237,.3);
+  color: #c4b5fd; font-size: .6rem; padding: 2px 9px;
+  border-radius: 7px; cursor: pointer; font-weight: 700; white-space: nowrap;
+}
+#sciToggle.active { background:rgba(0,212,212,.2); border-color:rgba(0,212,212,.4); color:#00d4d4; }
+#degToggle {
+  display: none;
+  background: rgba(0,212,212,.1); border: 1px solid rgba(0,212,212,.3);
+  color: #00d4d4; font-size: .6rem; padding: 2px 9px;
+  border-radius: 7px; cursor: pointer; font-weight: 700; font-family:'Orbitron',monospace;
+}
+#app.sci-mode #degToggle { display: inline; }
+
+#app.sci-mode .btn-grid {
+  grid-template-columns: repeat(5,1fr);
+  gap: 4px; padding: 7px 8px;
+}
+#app.sci-mode .btn {
+  min-height: 37px;
+  font-size: clamp(.56rem,1.9vw,.73rem);
+  border-radius: 9px;
+}
+.sci-only  { display: none; }
+#app.sci-mode .sci-only  { display: flex; }
+.basic-only { display: flex; }
+#app.sci-mode .basic-only { display: none; }
+.btn-zero { grid-column: span 2; }
+#app.sci-mode .btn-zero { grid-column: span 1; }
+
+.btn-sci   { background:linear-gradient(140deg,#0369a1,#0891b2); color:#fff; }
+.btn-sci:active { box-shadow: 0 0 22px rgba(8,145,178,.9); }
+.btn-inv   { background:linear-gradient(140deg,#d97706,#b45309); color:#fff; }
+.btn-inv.active { background:linear-gradient(140deg,#fbbf24,#f59e0b); color:#1a0f00; box-shadow:0 0 10px rgba(251,191,36,.5); }
+.btn-const { background:linear-gradient(140deg,rgba(52,211,153,.25),rgba(16,185,129,.25)); color:#6ee7b7; border:1px solid rgba(52,211,153,.2); }
+.btn-paren { background:rgba(168,85,247,.2); color:#c4b5fd; border:1px solid rgba(168,85,247,.2); }
+.btn-deg-t { background:rgba(0,212,212,.12); color:#00d4d4; border:1px solid rgba(0,212,212,.25); font-family:'Orbitron',monospace; }
+
 /* toast */
 .copy-toast {
   position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
@@ -551,6 +593,10 @@ html, body {
     <div class="display-wrap">
       <div class="scanlines"></div>
       <div class="display-inner">
+        <div class="display-topbar">
+          <button id="degToggle" onclick="toggleDeg()">DEG</button>
+          <button id="sciToggle" onclick="toggleSci()">מדע 🔬</button>
+        </div>
         <div class="display-expr" id="exprDisplay"></div>
         <div class="display-main" id="mainDisplay">0</div>
       </div>
@@ -558,34 +604,59 @@ html, body {
 
     <!-- Buttons -->
     <div class="btn-grid">
-      <button class="btn btn-form" onclick="openPanel('formulaPanel')">נוסחאות</button>
-      <button class="btn btn-quad" onclick="openPanel('quadPanel')">x²</button>
-      <button class="btn btn-func" onclick="openPanel('funcPanel')">חקר f(x)</button>
-      <button class="btn btn-del"  onclick="delChar()">⌫</button>
 
+      <!-- ── Sci rows 1-2 (hidden in basic) ── -->
+      <button class="btn btn-sci  sci-only" id="btn-sin" onclick="applySci('sin')">sin</button>
+      <button class="btn btn-sci  sci-only" id="btn-cos" onclick="applySci('cos')">cos</button>
+      <button class="btn btn-sci  sci-only" id="btn-tan" onclick="applySci('tan')">tan</button>
+      <button class="btn btn-deg-t sci-only" id="btn-deg" onclick="toggleDeg()">DEG</button>
+      <button class="btn btn-inv  sci-only" id="btn-inv" onclick="toggleInv()">inv</button>
+
+      <button class="btn btn-sci  sci-only" id="btn-log"  onclick="applySci('log')">log</button>
+      <button class="btn btn-sci  sci-only" id="btn-ln"   onclick="applySci('ln')">ln</button>
+      <button class="btn btn-paren sci-only" onclick="inputParen('(')">(</button>
+      <button class="btn btn-paren sci-only" onclick="inputParen(')')">)</button>
+      <button class="btn btn-sci  sci-only" id="btn-sqrt" onclick="applySci('sqrt')">√</button>
+
+      <!-- ── Row 1 basic-only: tools + ⌫ ── -->
+      <button class="btn btn-form  basic-only" onclick="openPanel('formulaPanel')">נוסחאות</button>
+      <button class="btn btn-quad  basic-only" onclick="openPanel('quadPanel')">x²</button>
+      <button class="btn btn-func  basic-only" onclick="openPanel('funcPanel')">חקר f(x)</button>
+      <button class="btn btn-del   basic-only" onclick="delChar()">⌫</button>
+
+      <!-- ── Util row (row 2 basic / row 3 sci) ── -->
+      <button class="btn btn-sci   sci-only" onclick="applySci('fact')">n!</button>
       <button class="btn btn-clear" onclick="clearAll()">C</button>
       <button class="btn btn-op"   onclick="inputOp('%')">%</button>
-      <button class="btn btn-op"   onclick="toggleSign()">+/−</button>
+      <button class="btn btn-op    basic-only" onclick="toggleSign()">+/−</button>
+      <button class="btn btn-del   sci-only"  onclick="delChar()">⌫</button>
       <button class="btn btn-op"   onclick="inputOp('/')">÷</button>
 
-      <button class="btn btn-num" onclick="inputDigit('7')">7</button>
-      <button class="btn btn-num" onclick="inputDigit('8')">8</button>
-      <button class="btn btn-num" onclick="inputDigit('9')">9</button>
-      <button class="btn btn-op"  onclick="inputOp('*')">×</button>
+      <!-- ── Number rows (left sci-col + 4 standard) ── -->
+      <button class="btn btn-sci   sci-only" id="btn-pow" onclick="applySci('pow')">xʸ</button>
+      <button class="btn btn-num"  onclick="inputDigit('7')">7</button>
+      <button class="btn btn-num"  onclick="inputDigit('8')">8</button>
+      <button class="btn btn-num"  onclick="inputDigit('9')">9</button>
+      <button class="btn btn-op"   onclick="inputOp('*')">×</button>
 
-      <button class="btn btn-num" onclick="inputDigit('4')">4</button>
-      <button class="btn btn-num" onclick="inputDigit('5')">5</button>
-      <button class="btn btn-num" onclick="inputDigit('6')">6</button>
-      <button class="btn btn-op"  onclick="inputOp('-')">−</button>
+      <button class="btn btn-const sci-only" onclick="applySci('sqrt2')">√</button>
+      <button class="btn btn-num"  onclick="inputDigit('4')">4</button>
+      <button class="btn btn-num"  onclick="inputDigit('5')">5</button>
+      <button class="btn btn-num"  onclick="inputDigit('6')">6</button>
+      <button class="btn btn-op"   onclick="inputOp('-')">−</button>
 
-      <button class="btn btn-num" onclick="inputDigit('1')">1</button>
-      <button class="btn btn-num" onclick="inputDigit('2')">2</button>
-      <button class="btn btn-num" onclick="inputDigit('3')">3</button>
-      <button class="btn btn-op"  onclick="inputOp('+')">+</button>
+      <button class="btn btn-const sci-only" onclick="applySci('pi')">π</button>
+      <button class="btn btn-num"  onclick="inputDigit('1')">1</button>
+      <button class="btn btn-num"  onclick="inputDigit('2')">2</button>
+      <button class="btn btn-num"  onclick="inputDigit('3')">3</button>
+      <button class="btn btn-op"   onclick="inputOp('+')">+</button>
 
-      <button class="btn btn-num btn-wide" onclick="inputDigit('0')">0</button>
-      <button class="btn btn-num" onclick="inputDot()">.</button>
-      <button class="btn btn-eq"  onclick="calculate()">=</button>
+      <button class="btn btn-const sci-only" onclick="applySci('euler')">e</button>
+      <button class="btn btn-num   sci-only" onclick="inputDouble0()">00</button>
+      <button class="btn btn-num   btn-zero" onclick="inputDigit('0')">0</button>
+      <button class="btn btn-num"  onclick="inputDot()">.</button>
+      <button class="btn btn-eq"   onclick="calculate()">=</button>
+
     </div>
 
   <!-- Formula Panel -->
@@ -675,6 +746,7 @@ for (let i=0;i<16;i++) {
 
 // ── Ripple effect ──────────────────────────────────────
 document.querySelectorAll('.btn').forEach(btn => {
+  btn._ripple = true;
   btn.addEventListener('pointerdown', e => {
     const r = document.createElement('span');
     const rect = btn.getBoundingClientRect();
@@ -1118,6 +1190,123 @@ async function analyzeFunc(){
     plotEl.classList.add('show');
     setTimeout(() => window.Plotly.Plots.resize(plotEl), 50);
   }catch(err){resEl.innerHTML=`<span style="color:#f38ba8">שגיאה: ${err.message}</span>`;resEl.classList.add('show');}
+}
+
+// ══ Scientific Mode ═════════════════════════════════════
+let sciMode=false, invMode=false, degMode=true;
+
+function toggleSci(){
+  sciMode=!sciMode;
+  document.getElementById('app').classList.toggle('sci-mode',sciMode);
+  const t=document.getElementById('sciToggle');
+  t.classList.toggle('active',sciMode);
+  t.textContent=sciMode?'מדע ✓':'מדע 🔬';
+  if(!sciMode){invMode=false;updateInvLabels();}
+  // re-attach ripple to newly-visible buttons
+  document.querySelectorAll('.btn').forEach(btn=>{
+    if(!btn._ripple){
+      btn._ripple=true;
+      btn.addEventListener('pointerdown',e=>{
+        const r=document.createElement('span');
+        const rect=btn.getBoundingClientRect();
+        const size=Math.max(rect.width,rect.height)*1.6;
+        r.style.cssText=`position:absolute;border-radius:50%;pointer-events:none;width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px;background:rgba(255,255,255,0.18);transform:scale(0);animation:ripple 0.5s ease-out forwards;`;
+        btn.appendChild(r);setTimeout(()=>r.remove(),520);
+      });
+    }
+  });
+}
+
+function toggleDeg(){
+  degMode=!degMode;
+  const lbl=degMode?'DEG':'RAD';
+  document.getElementById('btn-deg').textContent=lbl;
+  document.getElementById('degToggle').textContent=lbl;
+}
+
+function toggleInv(){
+  invMode=!invMode;
+  document.getElementById('btn-inv').classList.toggle('active',invMode);
+  updateInvLabels();
+}
+
+function updateInvLabels(){
+  const map=invMode
+    ?{sin:'sin⁻¹',cos:'cos⁻¹',tan:'tan⁻¹',log:'10^x',ln:'eˣ',sqrt:'x²',pow:'xʸ'}
+    :{sin:'sin',cos:'cos',tan:'tan',log:'log',ln:'ln',sqrt:'√',pow:'xʸ'};
+  for(const[k,v]of Object.entries(map)){
+    const el=document.getElementById('btn-'+k);
+    if(el)el.textContent=v;
+  }
+}
+
+function toRad(x){return degMode?x*Math.PI/180:x;}
+function fromRad(x){return degMode?x*180/Math.PI:x;}
+
+function applySci(fn){
+  const x=parseFloat(current);
+  if(isNaN(x)&&!['pi','euler'].includes(fn))return;
+  const key=invMode?({sin:'asin',cos:'acos',tan:'atan',log:'pow10',ln:'exp',sqrt:'sq'}[fn]??fn):fn;
+  const ops={
+    sin:  ()=>Math.sin(toRad(x)),
+    cos:  ()=>Math.cos(toRad(x)),
+    tan:  ()=>Math.tan(toRad(x)),
+    asin: ()=>fromRad(Math.asin(x)),
+    acos: ()=>fromRad(Math.acos(x)),
+    atan: ()=>fromRad(Math.atan(x)),
+    log:  ()=>Math.log10(x),
+    ln:   ()=>Math.log(x),
+    sqrt: ()=>Math.sqrt(x),
+    sq:   ()=>x*x,
+    pow10:()=>Math.pow(10,x),
+    exp:  ()=>Math.exp(x),
+    sqrt2:()=>Math.sqrt(x),
+    fact: ()=>{if(x<0||!Number.isInteger(x))return NaN;let r=1;for(let i=2;i<=x;i++)r*=i;return r;},
+    pi:   ()=>{current=String(Math.PI);justCalc=true;updateDisplay();return null;},
+    euler:()=>{current=String(Math.E);justCalc=true;updateDisplay();return null;},
+    pow:  ()=>{stored=x;operator='pow';freshNum=true;updateDisplay(`${x} ^`);return null;},
+  };
+  if(key==='pow'){ops.pow();if(invMode){invMode=false;updateInvLabels();}return;}
+  const res=ops[key]?.();
+  if(res===null||res===undefined)return;
+  if(!isFinite(res)){
+    const md=document.getElementById('mainDisplay');
+    md.textContent='שגיאה';md.className='display-main error';
+    current='0';freshNum=true;justCalc=false;
+    if(invMode){invMode=false;updateInvLabels();}
+    return;
+  }
+  current=parseFloat(res.toPrecision(10)).toString();
+  justCalc=true;updateDisplay();
+  if(invMode){invMode=false;updateInvLabels();}
+}
+
+// override runCalc to handle pow operator
+const _origRunCalc=runCalc;
+function runCalc(){
+  if(operator==='pow'){
+    const b=parseFloat(current);
+    current=parseFloat(Math.pow(stored,b).toPrecision(10)).toString();
+    return;
+  }
+  _origRunCalc();
+}
+
+function inputParen(p){
+  // simple: just append to expression string — future full paren support
+  if(p==='('){
+    if(!freshNum&&current!=='0')inputOp('*');
+    stored=null;operator=null;freshNum=true;
+    document.getElementById('exprDisplay').textContent+='(';
+  } else {
+    document.getElementById('exprDisplay').textContent+=')';
+  }
+}
+
+function inputDouble0(){
+  if(freshNum||justCalc)return;
+  if(current==='0'||current.length>=14)return;
+  current+='00';updateDisplay();
 }
 
 // ══ Keyboard input ══════════════════════════════════════
